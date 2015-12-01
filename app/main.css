@@ -1,5 +1,6 @@
 html,
-body {
+body,
+.container {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -7,6 +8,7 @@ body {
   color: #fff;
   font: normal normal 600 12pt/1 Arial;
   box-sizing: border-box;
+  overflow: hidden;
 }
 body {
   background: linear-gradient(27deg, #151515 5px, transparent 5px) 0 5px, linear-gradient(207deg, #151515 5px, transparent 5px) 10px 0, linear-gradient(27deg, #222 5px, transparent 5px) 0 10px, linear-gradient(207deg, #222 5px, transparent 5px) 10px 5px, linear-gradient(90deg, #1b1b1b 10px, transparent 10px), linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424);
@@ -16,33 +18,18 @@ body {
 body >* {
   box-sizing: border-box;
 }
-.layout {
-  width: 100%;
-  height: 100%;
-  oveflow: hidden;
+.container {
+  background-image: radial-gradient(150% 100%, transparent, #000);
 }
-.layout__categories {
-  width: 100%;
-  height: 100%;
-}
-.layout__categories.ng-animate {
-  transition: all linear 0.7s;
-}
-.layout__categories.ng-hide-add-active {
-  margin-top: -100%;
-}
-.layout__fields {
-  width: 100%;
-  height: 100%;
-}
+/*independent blocks*/
 .categories {
   display: flex;
   overflow-x: hidden;
   overflow-y: auto;
   flex-flow: row wrap;
   justify-content: space-around;
-  align-items: flex-start;
-  align-content: flex-start;
+  align-items: center;
+  align-content: center;
 }
 .categories__category {
   flex: 0 0 120px;
@@ -68,4 +55,61 @@ body >* {
 }
 .shutter__message {
   vertical-align: middle;
+}
+/*layout and elements */
+.full-width,
+.layout__fields,
+.layout__categories,
+.layout__additionals {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+.layout {
+  width: 100%;
+  height: 100%;
+  top: 0%;
+  position: relative;
+}
+.layout_categories {
+  top: 0%;
+}
+.layout_categories>.layout__categories {
+  opacity: 1;
+}
+.layout_categories-add,
+.layout_categories-remove {
+  transition: top linear 0.4s;
+}
+.layout_categories-add>.layout__categories,
+.layout_categories-remove>.layout__categories {
+  transition: opacity linear 0.2s;
+}
+.layout_fields {
+  top: -100%;
+}
+.layout_fields>.layout__fields {
+  opacity: 1;
+}
+.layout_fields-add,
+.layout_fields-remove {
+  transition: top linear 0.4s;
+}
+.layout_fields-add>.layout__fields,
+.layout_fields-remove>.layout__fields {
+  transition: opacity linear 0.2s;
+}
+.layout_additionals {
+  top: -200%;
+}
+.layout_additionals>.layout__additionals {
+  opacity: 1;
+}
+.layout_additionals-add,
+.layout_additionals-remove {
+  transition: top linear 0.4s;
+}
+.layout_additionals-add>.layout__additionals,
+.layout_additionals-remove>.layout__additionals {
+  transition: opacity linear 0.2s;
 }

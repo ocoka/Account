@@ -9,12 +9,16 @@ html
     style(type="text/css")
       include main.css
   body(ng-app="oAccount")
-    +b.layout(ng-controller="oOutcomes as ctl")
-      +b.categories.__categories(ng-hide="ctl.selected.category!=null")
-        +e.BUTTON.category(ng-repeat="(catId,category) in ctl.categories",ng-bind="category.name",ng-style="category.style",ng-click="ctl.setCategory(catId)") Category
-      +b.fields.ng-hide.__fields
-        +e.INPUT.sum(type="number",min="0",step="0.01",ng-model="ctl.selected.sum") 
-        +e.INPUT.btn(type="submit",value="SEND",ng-click="ctl.sendOutcomes()")
+    +b.container(ng-controller="oOutcomes as ctl",ng-class="'container_'+state.stage")
+      +b.layout(ng-class="'layout_'+state.stage")
+        +b.categories.__categories
+          +b.BUTTON.category.__category(ng-repeat="(catId,category) in categories",ng-bind="category.name",ng-style="category.style",ng-click="state.category=catId;state.stage='fields'") Category
+        +b.fields.__fields
+          +e.INPUT.sum(type="number",min="0",step="0.01",ng-model="state.sum") 
+          +b.INPUT.btn.__btn(type="button",value="PREV",ng-click="state.stage='categories'")
+          +e.INPUT.btn(type="button",value="NEXT",ng-click="state.stage='additionals'")
+        +b.additionals.__additionals
+          +b.INPUT.btn.__btn(type="button",value="PREV",ng-click="state.stage='categories'")
     +b.shutter(ng-hide="loaded")
       +e.SPAN.message Loading...
     script(src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js")
