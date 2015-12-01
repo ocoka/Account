@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  font: normal normal 600 12pt/1 Arial;
+  box-sizing: border-box;
+}
+body {
+  background: linear-gradient(27deg, #151515 5px, transparent 5px) 0 5px, linear-gradient(207deg, #151515 5px, transparent 5px) 10px 0, linear-gradient(27deg, #222 5px, transparent 5px) 0 10px, linear-gradient(207deg, #222 5px, transparent 5px) 10px 5px, linear-gradient(90deg, #1b1b1b 10px, transparent 10px), linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424);
+  background-color: #131313;
+  background-size: 20px 20px;
+}
+body >* {
+  box-sizing: border-box;
+}
+.layout {
+  width: 100%;
+  height: 100%;
+  oveflow: hidden;
+}
+.layout__categories {
+  width: 100%;
+  height: 100%;
+}
+.layout__categories.ng-animate {
+  transition: all linear 0.7s;
+}
+.layout__categories.ng-hide-add-active {
+  margin-top: -100%;
+}
+.layout__fields {
+  width: 100%;
+  height: 100%;
+}
+.categories {
+  display: flex;
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex-flow: row wrap;
+  justify-content: space-around;
+  align-items: flex-start;
+  align-content: flex-start;
+}
+.categories__category {
+  flex: 0 0 120px;
+}
+.category {
+  width: 120px;
+  height: 128px;
+  border: 1px solid #fff;
+}
+.shutter {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  text-align: center;
+  background-color: #000;
+}
+.shutter:before {
+  display: inline-block;
+  content: "";
+  line-height: 100%;
+  height: 100%;
+  vertical-align: middle;
+}
+.shutter__message {
+  vertical-align: middle;
+}
+
+    </style>
+  </head>
+  <body ng-app="oAccount">
+    <div ng-controller="oOutcomes as ctl" class="layout">
+      <div ng-hide="ctl.selected.category!=null" class="categories layout__categories">
+        <button ng-repeat="(catId,category) in ctl.categories" ng-bind="category.name" ng-style="category.style" ng-click="ctl.setCategory(catId)" class="categories__category">Category
+        </button>
+      </div>
+      <div class="fields layout__fields ng-hide"><input type="number" min="0" step="0.01" ng-model="ctl.selected.sum" class="fields__sum"/><input type="submit" value="SEND" ng-click="ctl.sendOutcomes()" class="fields__btn"/>
+      </div>
+    </div>
+    <div ng-hide="loaded" class="shutter"><span class="shutter__message">Loading...</span>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular-animate.js"></script>
+    <script type="text/javascript">/*global angular */
+angular.module("oAccount",["ngAnimate"]).controller("oOutcomes",["$scope",'$rootScope',function($scope,$root){
+  $root.loaded=true;
+  this.categories={first:{name:'Cat1'},second:{name:'Cat2'}};
+  this.selected={category:null,sum:null}
+  this.setCategory=function setCategory(catID){
+    this.selected.category=catID;
+    this.selected.sum=0;
+  }
+}]);
+
+    </script>
+  </body>
+</html>

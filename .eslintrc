@@ -1,0 +1,12 @@
+{
+    "ecmaFeatures": {
+    },
+    "extends": "eslint:recommended",
+    "env":{
+      "browser":true
+    },
+    "rules":{
+      "no-console":0,
+      "no-unused-vars":1
+    }
+}
