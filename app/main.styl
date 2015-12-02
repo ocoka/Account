@@ -52,27 +52,45 @@ body
     vertical-align middle
 
 /*layout and elements */
+@keyframes layout-enter
+  0%
+    opacity 0
+  100%
+    opacity 1
+
+
+@keyframes layout-leave
+  0%
+    opacity 1
+  100%
+    opacity 0
+
+@keyframes layout-enter1
+  0%
+    height 0%
+  100%
+    height 100%
+
+@keyframes layout-leave1
+  0%
+    height 100%
+  100%
+    height 0%
+
 .full-width
   width 100%
   height 100%
-  opacity 0
+  opacity 1
+  position relative
 .layout
   width 100%
   height 100%
-  top 0%
-  position relative
-  &__fields
-    @extend .full-width
-  &__categories
-    @extend .full-width
-  &__additionals
-    @extend .full-width
   for item,i in categories fields additionals
-    &_{item}
-      top -(i*100)%
-    &_{item}>&__{item}
+    &__{item}
+      @extend .full-width
+    &__{item}.ng-enter
       opacity 1
-    &_{item}-add,&_{item}-remove
-      transition top linear 0.4s
-    &_{item}-add>&__{item},&_{item}-remove>&__{item}
-      transition opacity linear 0.2s
+      animation layout-enter 0.3s,layout-enter1 0.5s
+    &__{item}.ng-leave
+      opacity 0
+      animation layout-leave 0.3s,layout-leave1 0.5s
