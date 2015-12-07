@@ -1,56 +1,126 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <base target="_top">
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.amber-indigo.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900,900italic&amp;subset=latin,cyrillic,cyrillic-ext" rel="stylesheet" type="text/css">
+    <script src="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.min.js"></script>
     <style type="text/css">html,
 body,
-.container {
+.layout {
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
-  color: #fff;
-  font: normal normal 600 12pt/1 Arial;
   box-sizing: border-box;
   overflow: hidden;
 }
 body {
-  background: linear-gradient(27deg, #151515 5px, transparent 5px) 0 5px, linear-gradient(207deg, #151515 5px, transparent 5px) 10px 0, linear-gradient(27deg, #222 5px, transparent 5px) 0 10px, linear-gradient(207deg, #222 5px, transparent 5px) 10px 5px, linear-gradient(90deg, #1b1b1b 10px, transparent 10px), linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424);
-  background-color: #131313;
   background-size: 20px 20px;
-}
-body >* {
-  box-sizing: border-box;
-}
-.container {
-  background-image: radial-gradient(150% 100%, transparent, #000);
 }
 /*independent blocks*/
 .categories {
   display: flex;
-  overflow-x: hidden;
-  overflow-y: auto;
   flex-flow: row wrap;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
   align-content: center;
 }
 .categories__category {
-  flex: 0 0 120px;
+  flex: 0 0 150px;
+  width: 150px;
+  margin: 1rem 1rem;
 }
-.category {
-  width: 120px;
-  height: 128px;
-  border: 1px solid #fff;
+.categories__category >.mdl-card__title {
+  height: 140px;
+  background-position: 50% 0%;
+  background-repeat: no-repeat;
+}
+.categories__category .mdl-card__title-text {
+  background-color: rgba(194,236,32,0.58);
+  border-radius: 5px;
+  padding-left: 0.4em;
+  padding-right: 0.4em;
+  white-space: nowrap;
+  font-size: 15px;
+}
+.categories__category .mdl-button {
+  min-width: 0;
+  padding: 0 0.4em;
+  margin-left: 0.4em;
+}
+.category__spend {
+  float: right;
+}
+.category__clear {
+  float: right;
+}
+.prop {
+  border-radius: 5px;
+  background-color: #d7e0e0;
+  padding-left: 0.4em;
+  font-family: 'Roboto';
+  display: inline;
+}
+.prop__name {
+  font-weight: 300;
+  padding-right: 0.4em;
+  vertical-align: middle;
+}
+.prop__value {
+  background-color: #ec2b58;
+  vertical-align: middle;
+  color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  line-height: 0;
+  box-sizing: border-box;
+  font-weight: 600;
+  width: 2.2em;
+  height: 2.2em;
+  text-align: center;
+  padding: 1.1em 0;
+}
+.prop__value.prop__value_big {
+  width: 3em;
+  height: 3em;
+  padding: 1.5em 0;
+}
+.drawer {
+  position: fixed;
+  padding: 0.4rem 1rem 0.8rem 1rem;
+  background-color: #fff;
+  box-sizing: border-box;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+}
+.drawer__props {
+  flex: 1 1 auto;
+}
+.drawer__controls {
+  flex: 1 1 auto;
+  text-align: center;
+  white-space: nowrap;
 }
 .shutter {
   width: 100%;
   height: 100%;
   position: absolute;
+  top: 0;
+  left: 0;
   text-align: center;
   background-color: #000;
+  z-index: 9;
 }
 .shutter:before {
   display: inline-block;
@@ -60,7 +130,9 @@ body >* {
   vertical-align: middle;
 }
 .shutter__message {
+  display: inline-block;
   vertical-align: middle;
+  color: #fff;
 }
 /*layout and elements */
 .full-width,
@@ -68,13 +140,11 @@ body >* {
 .layout__fields,
 .layout__additionals {
   width: 100%;
-  height: 100%;
   opacity: 1;
   position: relative;
 }
 .layout {
-  width: 100%;
-  height: 100%;
+  overflow-y: auto;
 }
 .layout__categories.ng-enter {
   opacity: 1;
@@ -231,29 +301,132 @@ body >* {
 
     </style>
   </head>
-  <body ng-app="oAccount">
-    <div ng-controller="oOutcomes as ctl" class="container">
-      <div class="layout">
-        <div ng-if="state.stage=='categories'" class="categories layout__categories">
-          <button ng-repeat="(catId,category) in categories" ng-bind="category.name" ng-style="category.style" ng-click="state.category=catId;state.stage='fields'" class="categories__category category">Category
-          </button>
+  <body ng-app="oAccount"> 
+    <div ng-controller="oOutcomes as ctl" class="layout">
+      <div ng-if="drawer.show" class="drawer layout__drawer mdl-shadow--2dp">
+        <div class="drawer__props">
+          <div class="prop"><span class="prop__name">Общий итог</span><span ng-bind="overallAmount()" class="prop__value prop__value_big"></span>
+          </div>
         </div>
-        <div ng-if="state.stage=='fields'" class="fields layout__fields"><input type="number" min="0" step="0.01" ng-model="state.sum" class="fields__sum"/><input type="button" value="PREV" ng-click="state.stage='categories'" class="btn fields__btn"/><input type="button" value="NEXT" ng-click="state.stage='additionals'" class="fields__btn"/>
-        </div>
-        <div ng-if="state.stage=='additionals'" class="additionals layout__additionals"><input type="button" value="BEGIN" ng-click="state.stage='categories'" class="additionals__btn btn"/>
+        <div class="drawer__controls">
+          <button o-mdl ng-click="ctl.clearAll()" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent mdl-js-ripple-effect">CLEAR</button>
+          <button o-mdl ng-click="ctl.checkOut()" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect">CHECKOUT</button>
         </div>
       </div>
+      <div ng-if="state.stage=='categories'" class="categories layout__categories">
+        <div o-mdl="o-mdl" ng-repeat="(catId,category) in categories" class="categories__category category mdl-card mdl-shadow--2dp">
+          <div ng-style="{'background-image':'url({{category.image}})'}" class="mdl-card__title">
+            <h1 ng-bind="category.name" class="mdl-card__title-text"></h1>
+          </div>
+          <div class="mdl-card__supporting-text">
+            <div ng-show="category.amount>0" class="category__prop ng-hide prop"><span class="prop__name">Итого</span><span ng-bind="category.amount" class="prop__value"></span>
+            </div>
+          </div>
+          <div class="mdl-card__actions">
+            <div o-mdl class="mdl-textfield mdl-js-textfield">
+              <input type="number" id="catId" ng-model="amount" class="mdl-textfield__input">
+              <label for="catId" class="mdl-textfield__label">Price</label>
+            </div>
+            <button o-mdl="o-mdl" ng-click="ctl.spendOnCategory(category,amount);amount=''" class="category__spend mdl-button mdl-button--colored mdl-button--raised mdl-js-button mdl-js-ripple-effect">ADD
+            </button>
+            <button o-mdl="o-mdl" ng-show="category.amount>0" ng-click="ctl.clearCategory(category);amount=''" class="category__clear mdl-button mdl-button--accent mdl-button--raised mdl-js-button mdl-js-ripple-effect ng-hide">CLEAR
+            </button>
+          </div>
+        </div>
+      </div>
+      <div ng-if="state.stage=='fields'" class="fields layout__fields"><input type="number" min="0" step="0.01" ng-model="state.sum" class="fields__sum"/><input type="button" value="PREV" ng-click="state.stage='categories'" class="btn fields__btn"/><input type="button" value="NEXT" ng-click="state.stage='additionals'" class="fields__btn"/>
+      </div>
+      <div ng-if="state.stage=='additionals'" class="additionals layout__additionals"><input type="button" value="BEGIN" ng-click="state.stage='categories'" class="additionals__btn btn"/>
+      </div>
     </div>
-    <div ng-hide="loaded" class="shutter"><span class="shutter__message">Loading...</span>
+    <div ng-hide="!(shutter.loading||shutter.show)" class="shutter">
+      <div class="message shutter__message">
+        <div ng-class="{'is-active':shutter.loading}" class="mdl-js-spinner mdl-spinner message__spinner">
+        </div>
+        <div ng-bind="shutter.message.text" class="message__text">
+        </div>
+      </div>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular-animate.js"></script>
-    <script type="text/javascript">/*global angular */
-angular.module("oAccount",["ngAnimate"]).controller("oOutcomes",["$scope",'$rootScope',function($scope,$root){
+    <script type="text/javascript">/*global angular google componentHandler*/
+angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
+  $root.shutter={loading:true,show:false,message:{isError:false,text:''}};
+  $root.drawer={show:false};
+}]).directive("oMdl",function(){
+  return {
+    priority: 0,
+    restrict: 'A',
+    scope: false,
+    link: function oMdlPostLink(scope, iElement, iAttrs) {
+      componentHandler.upgradeElement(iElement.get(0));
+    }
+  }
+}).controller("oOutcomes",["$scope",'$rootScope',function($scope,$root){
+
+  this.spendOnCategory=function spendOnCategory(category,amount){
+    amount=parseInt(amount);
+    if (amount>0){
+      google.script.run.withSuccessHandler(saveCategorySuccess).spendOnCategory(category.idx,amount);
+    }
+  }
   $scope.state={sum:0,stage:'categories',fin:null,category:null};
-  $scope.categories={c1:{name:'Cat1'},c2:{name:'Cat2'},c3:{name:'Cat3'},c4:{name:'Cat4'}};
-  $root.loaded=true;
+  $scope.categories={};
+  $root.shutter.loading=false;
+  $scope.overallAmount=function overallAmount(){
+    var sum=0;
+    for (var catId in $scope.categories){
+      var pInt=parseInt($scope.categories[catId].amount);
+      sum+=pInt!=null && !isNaN(pInt)?pInt:0;
+    }
+    return sum;
+  }
+  function showError(text){
+    $root.shutter.message.isError=true;
+    $root.shutter.message.text=text;
+    $root.shutter.show=true;
+  }
+  function clearError(){
+    $root.shutter.message.isError=false;
+    $root.shutter.message.text="";
+    $root.shutter.show=false;
+  }
+  function loadCategoriesSuccess(answer){
+    if (answer.result===0){
+      $scope.categories=answer.data.reduce(
+        function(p,n){
+          p[n.id]=n;
+          return p;
+        }
+        ,{});
+      checkDrawer();
+      $scope.$apply();
+    }else{
+      showError(answer.data);
+    }
+  }
+  function checkDrawer(){
+    if ($scope.overallAmount()>0){
+      $root.drawer.show=true;
+    }
+    else{
+      $root.drawer.show=false;
+    }
+  }
+  function saveCategorySuccess(answer){
+    if (answer.result===0){
+      $scope.categories[answer.data[0].id]=answer.data[0];
+      checkDrawer();
+      $scope.$apply();
+    }else{
+      showError(answer.data);
+    }
+  }
+
+
+   google.script.run.withSuccessHandler(loadCategoriesSuccess).loadCategories();
+
 }]);
 
     </script>

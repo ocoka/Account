@@ -7,24 +7,51 @@ mixin layout(name)
 doctype
 html
   head
+    base(target="_top")
     meta(charset="utf-8")
     meta(http-equiv="x-ua-compatible",content="ie=edge")
     meta(name="viewport",content="width=device-width, initial-scale=1")
+    link(rel="stylesheet",href="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.amber-indigo.min.css")
+    link(rel="stylesheet",href="https://fonts.googleapis.com/icon?family=Material+Icons")
+    link(href='https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900,900italic&subset=latin,cyrillic,cyrillic-ext',rel='stylesheet',type='text/css')
+    script(src="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.min.js")
     style(type="text/css")
       include main.css
-  body(ng-app="oAccount")
-    +b.container(ng-controller="oOutcomes as ctl")
-      +b.layout
-        +layout("categories")
-          +b.BUTTON.category.__category(ng-repeat="(catId,category) in categories",ng-bind="category.name",ng-style="category.style",ng-click="state.category=catId;state.stage='fields'") Category
-        +layout("fields")
-          +e.INPUT.sum(type="number",min="0",step="0.01",ng-model="state.sum") 
-          +b.INPUT.btn.__btn(type="button",value="PREV",ng-click="state.stage='categories'")
-          +e.INPUT.btn(type="button",value="NEXT",ng-click="state.stage='additionals'")
-        +layout("additionals")
-          +b.INPUT.btn.__btn(type="button",value="BEGIN",ng-click="state.stage='categories'")
-    +b.shutter(ng-hide="loaded")
-      +e.SPAN.message Loading...
+  body(ng-app="oAccount")  
+    +b.layout(ng-controller="oOutcomes as ctl")
+      +b.drawer.__drawer.mdl-shadow--2dp(ng-if="drawer.show")
+        +e.props
+          +b.prop
+            +e.SPAN.name Общий итог
+            +e.SPAN.value_big(ng-bind="overallAmount()")
+        +e.controls
+          button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.clearAll()") CLEAR
+          button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.checkOut()") CHECKOUT
+      +layout("categories")(ng-class="{'w-drawer':drawer.show}")
+        +b.category.__category.mdl-card.mdl-shadow--2dp(o-mdl,ng-repeat="(catId,category) in categories")
+          div.mdl-card__title(ng-style="{'background-image':'url({{category.image}})'}")
+            h1.mdl-card__title-text(ng-bind="category.name")
+          div.mdl-card__supporting-text
+            +b.prop.__prop.ng-hide(ng-show!="category.amount>0")
+              +e.SPAN.name Итого
+              +e.SPAN.value(ng-bind="category.amount")
+          div.mdl-card__actions
+            div.mdl-textfield.mdl-js-textfield(o-mdl)
+              input.mdl-textfield__input(type="number",id="catId",ng-model="amount")
+              label.mdl-textfield__label(for="catId") Price
+            +e.BUTTON.spend.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.spendOnCategory(category,amount);amount=''") ADD
+            +e.BUTTON.clear.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect.ng-hide(o-mdl,ng-show!="category.amount>0",ng-click!="ctl.clearCategory(category);amount=''") CLEAR
+          
+      +layout("fields")
+        +e.INPUT.sum(type="number",min="0",step="0.01",ng-model="state.sum") 
+        +b.INPUT.btn.__btn(type="button",value="PREV",ng-click="state.stage='categories'")
+        +e.INPUT.btn(type="button",value="NEXT",ng-click="state.stage='additionals'")
+      +layout("additionals")
+        +b.INPUT.btn.__btn(type="button",value="BEGIN",ng-click="state.stage='categories'")
+    +b.shutter(ng-hide="!(shutter.loading||shutter.show)")
+      +b.message.__message
+        +e.spinner.mdl-spinner.mdl-js-spinner(ng-class="{'is-active':shutter.loading}")
+        +e.text(ng-bind="shutter.message.text")
     script(src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js")
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js")
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular-animate.js")
