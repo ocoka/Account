@@ -49,7 +49,7 @@ body {
   font-size: 15px;
 }
 .categories__category .mdl-button {
-  min-width: 0;
+  min-width: 4.2em;
   padding: 0 0.4em;
   margin-left: 0.4em;
 }
@@ -103,6 +103,7 @@ body {
   flex-flow: row wrap;
   align-items: flex-start;
   align-content: flex-start;
+  transition: top 0.7s;
 }
 .drawer__props {
   flex: 1 1 auto;
@@ -132,7 +133,21 @@ body {
 .shutter__message {
   display: inline-block;
   vertical-align: middle;
+}
+.message__text {
   color: #fff;
+}
+.message__text.message__text_error {
+  color: #f00;
+}
+.message__text.message__text_error:before {
+  content: "err:";
+  display: inline;
+  background-color: #f00;
+  color: #000;
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  margin-right: 0.4em;
 }
 /*layout and elements */
 .full-width,
@@ -303,14 +318,14 @@ body {
   </head>
   <body ng-app="oAccount"> 
     <div ng-controller="oOutcomes as ctl" class="layout">
-      <div ng-if="drawer.show" class="drawer layout__drawer mdl-shadow--2dp">
+      <div o-drawer="o-drawer" ng-if="drawer.show" class="drawer layout__drawer mdl-shadow--2dp">
         <div class="drawer__props">
           <div class="prop"><span class="prop__name">Общий итог</span><span ng-bind="overallAmount()" class="prop__value prop__value_big"></span>
           </div>
         </div>
         <div class="drawer__controls">
-          <button o-mdl ng-click="ctl.clearAll()" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent mdl-js-ripple-effect">CLEAR</button>
           <button o-mdl ng-click="ctl.checkOut()" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect">CHECKOUT</button>
+          <button o-mdl ng-click="ctl.clearCategoryAmount()" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent mdl-js-ripple-effect">CLEAR</button>
         </div>
       </div>
       <div ng-if="state.stage=='categories'" class="categories layout__categories">
@@ -327,9 +342,9 @@ body {
               <input type="number" id="catId" ng-model="amount" class="mdl-textfield__input">
               <label for="catId" class="mdl-textfield__label">Price</label>
             </div>
-            <button o-mdl="o-mdl" ng-click="ctl.spendOnCategory(category,amount);amount=''" class="category__spend mdl-button mdl-button--colored mdl-button--raised mdl-js-button mdl-js-ripple-effect">ADD
+            <button o-mdl="o-mdl" ng-show="category.amount>0" ng-click="ctl.clearCategoryAmount(category);amount=''" class="category__clear mdl-button mdl-button--accent mdl-button--raised mdl-js-button mdl-js-ripple-effect ng-hide">CLEAR
             </button>
-            <button o-mdl="o-mdl" ng-show="category.amount>0" ng-click="ctl.clearCategory(category);amount=''" class="category__clear mdl-button mdl-button--accent mdl-button--raised mdl-js-button mdl-js-ripple-effect ng-hide">CLEAR
+            <button o-mdl="o-mdl" ng-click="ctl.spendOnCategory(category,amount);amount=''" class="category__spend mdl-button mdl-button--colored mdl-button--raised mdl-js-button mdl-js-ripple-effect">ADD
             </button>
           </div>
         </div>
@@ -343,14 +358,14 @@ body {
       <div class="message shutter__message">
         <div ng-class="{'is-active':shutter.loading}" class="mdl-js-spinner mdl-spinner message__spinner">
         </div>
-        <div ng-bind="shutter.message.text" class="message__text">
+        <div ng-bind="shutter.message.text" ng-class="{'message__text_error':shutter.message.isError}" class="message__text">
         </div>
       </div>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular-animate.js"></script>
-    <script type="text/javascript">/*global angular google componentHandler*/
+    <script type="text/javascript">/*global angular google componentHandler $*/
 angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
   $root.shutter={loading:true,show:false,message:{isError:false,text:''}};
   $root.drawer={show:false};
@@ -363,25 +378,31 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
       componentHandler.upgradeElement(iElement.get(0));
     }
   }
+}).directive("oDrawer",function(){
+  var deferScrollRecalc=null;
+  return {
+    priority: 0,
+    restrict: 'A',
+    scope: false,
+    link: function oDrawerPostLink(scope, iElement, iAttrs) {
+      iElement.parent().on("scroll.oDrawer",function (e){
+        if (deferScrollRecalc!=null){
+          clearTimeout(deferScrollRecalc);
+        }
+        deferScrollRecalc=setTimeout(function(){
+          deferScrollRecalc=null;
+          if ($(e.target).scrollTop()>0){
+            var prev=parseInt(iElement.css("height"));
+            iElement.css({top:'-'+(prev-8)+'px'});
+          }else{
+            iElement.css({top:""});
+          }
+        },400);
+      });
+    }
+  }
 }).controller("oOutcomes",["$scope",'$rootScope',function($scope,$root){
-
-  this.spendOnCategory=function spendOnCategory(category,amount){
-    amount=parseInt(amount);
-    if (amount>0){
-      google.script.run.withSuccessHandler(saveCategorySuccess).spendOnCategory(category.idx,amount);
-    }
-  }
-  $scope.state={sum:0,stage:'categories',fin:null,category:null};
-  $scope.categories={};
-  $root.shutter.loading=false;
-  $scope.overallAmount=function overallAmount(){
-    var sum=0;
-    for (var catId in $scope.categories){
-      var pInt=parseInt($scope.categories[catId].amount);
-      sum+=pInt!=null && !isNaN(pInt)?pInt:0;
-    }
-    return sum;
-  }
+  /*----------*/
   function showError(text){
     $root.shutter.message.isError=true;
     $root.shutter.message.text=text;
@@ -392,6 +413,24 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
     $root.shutter.message.text="";
     $root.shutter.show=false;
   }
+  function checkDrawer(){
+    if ($scope.overallAmount()>0){
+      $root.drawer.show=true;
+    }
+    else{
+      $root.drawer.show=false;
+    }
+  }
+  function loadCategorySuccess(answer){
+    if (answer.result===0){
+      $scope.categories[answer.data[0].id]=answer.data[0];
+      checkDrawer();
+
+    }else{
+      showError(answer.data);
+    }
+    $scope.$apply();
+  }
   function loadCategoriesSuccess(answer){
     if (answer.result===0){
       $scope.categories=answer.data.reduce(
@@ -401,30 +440,46 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
         }
         ,{});
       checkDrawer();
-      $scope.$apply();
+
     }else{
       showError(answer.data);
     }
+    $scope.$apply();
   }
-  function checkDrawer(){
+  /*----------*/
+  $scope.state={sum:0,stage:'categories',fin:null,category:null};
+  $scope.categories={};
+  $root.shutter.loading=false;
+  /*----------*/
+  $scope.overallAmount=function overallAmount(){
+    var sum=0;
+    for (var catId in $scope.categories){
+      var pInt=parseInt($scope.categories[catId].amount);
+      sum+=pInt!=null && !isNaN(pInt)?pInt:0;
+    }
+    return sum;
+  }
+  /*----------*/
+  this.spendOnCategory=function spendOnCategory(category,amount){
+    amount=parseInt(amount);
+    if (amount>0){
+      google.script.run.withSuccessHandler(loadCategorySuccess).spendOnCategory(category.idx,amount);
+    }
+  }
+  this.checkOut=function checkOut(){
     if ($scope.overallAmount()>0){
-      $root.drawer.show=true;
-    }
-    else{
-      $root.drawer.show=false;
+      google.script.run.withSuccessHandler(loadCategoriesSuccess).checkOut();
     }
   }
-  function saveCategorySuccess(answer){
-    if (answer.result===0){
-      $scope.categories[answer.data[0].id]=answer.data[0];
-      checkDrawer();
-      $scope.$apply();
+
+  this.clearCategoryAmount=function clearCategoryAmount(category){
+    if (category!=null){
+      google.script.run.withSuccessHandler(loadCategorySuccess).clearCategoryAmount(category.idx);
     }else{
-      showError(answer.data);
+      google.script.run.withSuccessHandler(loadCategoriesSuccess).clearCategoryAmount();
     }
+
   }
-
-
    google.script.run.withSuccessHandler(loadCategoriesSuccess).loadCategories();
 
 }]);

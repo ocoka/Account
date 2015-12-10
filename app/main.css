@@ -38,7 +38,7 @@ body {
   font-size: 15px;
 }
 .categories__category .mdl-button {
-  min-width: 0;
+  min-width: 4.2em;
   padding: 0 0.4em;
   margin-left: 0.4em;
 }
@@ -92,6 +92,7 @@ body {
   flex-flow: row wrap;
   align-items: flex-start;
   align-content: flex-start;
+  transition: top 0.7s;
 }
 .drawer__props {
   flex: 1 1 auto;
@@ -121,7 +122,21 @@ body {
 .shutter__message {
   display: inline-block;
   vertical-align: middle;
+}
+.message__text {
   color: #fff;
+}
+.message__text.message__text_error {
+  color: #f00;
+}
+.message__text.message__text_error:before {
+  content: "err:";
+  display: inline;
+  background-color: #f00;
+  color: #000;
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  margin-right: 0.4em;
 }
 /*layout and elements */
 .full-width,

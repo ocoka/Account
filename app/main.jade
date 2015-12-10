@@ -19,14 +19,14 @@ html
       include main.css
   body(ng-app="oAccount")  
     +b.layout(ng-controller="oOutcomes as ctl")
-      +b.drawer.__drawer.mdl-shadow--2dp(ng-if="drawer.show")
+      +b.drawer.__drawer.mdl-shadow--2dp(o-drawer,ng-if="drawer.show")
         +e.props
           +b.prop
             +e.SPAN.name Общий итог
             +e.SPAN.value_big(ng-bind="overallAmount()")
         +e.controls
-          button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.clearAll()") CLEAR
           button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.checkOut()") CHECKOUT
+          button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.clearCategoryAmount()") CLEAR
       +layout("categories")(ng-class="{'w-drawer':drawer.show}")
         +b.category.__category.mdl-card.mdl-shadow--2dp(o-mdl,ng-repeat="(catId,category) in categories")
           div.mdl-card__title(ng-style="{'background-image':'url({{category.image}})'}")
@@ -39,8 +39,8 @@ html
             div.mdl-textfield.mdl-js-textfield(o-mdl)
               input.mdl-textfield__input(type="number",id="catId",ng-model="amount")
               label.mdl-textfield__label(for="catId") Price
+            +e.BUTTON.clear.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect.ng-hide(o-mdl,ng-show!="category.amount>0",ng-click!="ctl.clearCategoryAmount(category);amount=''") CLEAR
             +e.BUTTON.spend.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.spendOnCategory(category,amount);amount=''") ADD
-            +e.BUTTON.clear.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect.ng-hide(o-mdl,ng-show!="category.amount>0",ng-click!="ctl.clearCategory(category);amount=''") CLEAR
           
       +layout("fields")
         +e.INPUT.sum(type="number",min="0",step="0.01",ng-model="state.sum") 
@@ -51,7 +51,7 @@ html
     +b.shutter(ng-hide="!(shutter.loading||shutter.show)")
       +b.message.__message
         +e.spinner.mdl-spinner.mdl-js-spinner(ng-class="{'is-active':shutter.loading}")
-        +e.text(ng-bind="shutter.message.text")
+        +e.text(ng-bind="shutter.message.text",ng-class="{'message__text_error':shutter.message.isError}")
     script(src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js")
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js")
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular-animate.js")

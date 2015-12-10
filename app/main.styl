@@ -34,7 +34,7 @@ body
       white-space nowrap
       font-size 15px
     .mdl-button
-      min-width 0
+      min-width 4.2em
       padding 0 0.4em
       margin-left 0.4em
 
@@ -86,6 +86,7 @@ body
   flex-flow row wrap
   align-items flex-start
   align-content flex-start
+  transition top 0.7s
   &__props
     flex 1 1 auto
   &__controls
@@ -112,7 +113,20 @@ body
   &__message
     display inline-block
     vertical-align middle
+
+.message
+  &__text
     color white
+    &\&&_error
+      color red
+      &:before
+        content "err:"
+        display inline
+        background-color red
+        color black
+        border-radius 4px
+        padding 0.2em 0.4em
+        margin-right 0.4em
 
 /*layout and elements */
 @keyframes layout-enter
