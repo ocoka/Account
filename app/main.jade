@@ -17,13 +17,16 @@ html
     script(src="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.min.js")
     style(type="text/css")
       include main.css
-  body(ng-app="oAccount")  
+  body(ng-app="oAccount")
     +b.layout(ng-controller="oOutcomes as ctl")
       +b.drawer.__drawer.mdl-shadow--2dp(o-drawer,ng-if="drawer.show")
         +e.props
-          +b.prop
-            +e.SPAN.name Общий итог
-            +e.SPAN.value_big(ng-bind="overallAmount()")
+          +b.prop(ng-if="overallOutcome>0")
+            +e.SPAN.name Общий расход
+            +e.SPAN.value_big(ng-bind="overallOutcome")
+          +b.prop(ng-if="overallIncome>0")
+            +e.SPAN.name Общий&nbsp;&nbsp;&nbsp;доход
+            +e.SPAN.value_biggreen(ng-bind="overallIncome")
         +e.controls
           button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.checkOut()") CHECKOUT
           button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.clearCategoryAmount()") CLEAR
@@ -34,7 +37,7 @@ html
           div.mdl-card__supporting-text
             +b.prop.__prop.ng-hide(ng-show!="category.amount>0")
               +e.SPAN.name Итого
-              +e.SPAN.value(ng-bind="category.amount")
+              +e.SPAN.value(ng-bind="category.amount",ng-class="{'prop__value_biggreen':category.type==1}")
           div.mdl-card__actions
             div.mdl-textfield.mdl-js-textfield(o-mdl)
               input.mdl-textfield__input(type="number",id="catId",ng-model="amount")

@@ -49,16 +49,16 @@ body {
   float: right;
 }
 .prop {
-  border-radius: 5px;
-  background-color: #d7e0e0;
-  padding-left: 0.4em;
   font-family: 'Roboto';
   display: inline;
 }
 .prop__name {
   font-weight: 300;
-  padding-right: 0.4em;
+  padding: 0 0.8em 0 0.4em;
   vertical-align: middle;
+  border-radius: 5px;
+  background-color: #d7e0e0;
+  margin-right: -0.4em;
 }
 .prop__value {
   background-color: #ec2b58;
@@ -74,10 +74,14 @@ body {
   text-align: center;
   padding: 1.1em 0;
 }
-.prop__value.prop__value_big {
+.prop__value.prop__value_big,
+.prop__value.prop__value_biggreen {
   width: 3em;
   height: 3em;
   padding: 1.5em 0;
+}
+.prop__value.prop__value_biggreen {
+  background-color: #5fa347;
 }
 .drawer {
   position: fixed;
@@ -90,12 +94,21 @@ body {
   width: 100%;
   display: flex;
   flex-flow: row wrap;
-  align-items: flex-start;
+  align-items: flex-end;
   align-content: flex-start;
   transition: top 0.7s;
 }
 .drawer__props {
   flex: 1 1 auto;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  align-content: flex-start;
+}
+.drawer__props >.prop {
+  flex: 0 0 auto;
+  margin-top: 0.2em;
 }
 .drawer__controls {
   flex: 1 1 auto;

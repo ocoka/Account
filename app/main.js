@@ -35,7 +35,23 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
     }
   }
 }).controller("oOutcomes",["$scope",'$rootScope',function($scope,$root){
+
   /*----------*/
+  function recalcOverallAmount(){
+    $scope.overallIncome=0;
+    $scope.overallOutcome=0;
+    for (var catId in $scope.categories){
+      var pInt=parseInt($scope.categories[catId].amount);
+      if (!isNaN(pInt)){
+        if($scope.categories[catId].type==1){
+          $scope.overallIncome+=pInt;
+        }else {
+          $scope.overallOutcome+=pInt;
+        }
+      }
+    }
+  }
+
   function showError(text){
     $root.shutter.message.isError=true;
     $root.shutter.message.text=text;
@@ -47,32 +63,33 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
     $root.shutter.show=false;
   }
   function checkDrawer(){
-    if ($scope.overallAmount()>0){
+    recalcOverallAmount();
+    if ($scope.overallIncome>0||$scope.overallOutcome>0){
       $root.drawer.show=true;
     }
     else{
       $root.drawer.show=false;
     }
   }
-  function loadCategorySuccess(answer){
-    if (answer.result===0){
-      $scope.categories[answer.data[0].id]=answer.data[0];
-      checkDrawer();
-
-    }else{
-      showError(answer.data);
-    }
-    $scope.$apply();
+  function genericFailure(error){
+    showError(error.message);
   }
-  function loadCategoriesSuccess(answer){
+
+  function loadAppStateSuccess(answer){
     if (answer.result===0){
-      $scope.categories=answer.data.reduce(
+      $scope.categories=answer.data.categories.reduce(
         function(p,n){
           p[n.id]=n;
           return p;
         }
         ,{});
       checkDrawer();
+      $scope.contractors=answer.data.contractors.reduce(
+        function(p,n){
+          p[n.id]=n;
+          return p;
+        }
+        ,{});
 
     }else{
       showError(answer.data);
@@ -82,37 +99,33 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
   /*----------*/
   $scope.state={sum:0,stage:'categories',fin:null,category:null};
   $scope.categories={};
+  $scope.contractors={};
+  $scope.overallIncome=0;
+  $scope.overallOutcome=0;
   $root.shutter.loading=false;
   /*----------*/
-  $scope.overallAmount=function overallAmount(){
-    var sum=0;
-    for (var catId in $scope.categories){
-      var pInt=parseInt($scope.categories[catId].amount);
-      sum+=pInt!=null && !isNaN(pInt)?pInt:0;
-    }
-    return sum;
-  }
+
   /*----------*/
   this.spendOnCategory=function spendOnCategory(category,amount){
     amount=parseInt(amount);
     if (amount>0){
-      google.script.run.withSuccessHandler(loadCategorySuccess).spendOnCategory(category.idx,amount);
+      google.script.run.withSuccessHandler(loadAppStateSuccess).spendOnCategory(category.idx,amount);
     }
   }
   this.checkOut=function checkOut(){
     if ($scope.overallAmount()>0){
-      google.script.run.withSuccessHandler(loadCategoriesSuccess).checkOut();
+      google.script.run.withSuccessHandler(loadAppStateSuccess).checkOut();
     }
   }
 
   this.clearCategoryAmount=function clearCategoryAmount(category){
     if (category!=null){
-      google.script.run.withSuccessHandler(loadCategorySuccess).clearCategoryAmount(category.idx);
+      google.script.run.withSuccessHandler(loadAppStateSuccess).clearCategoryAmount(category.idx);
     }else{
-      google.script.run.withSuccessHandler(loadCategoriesSuccess).clearCategoryAmount();
+      google.script.run.withSuccessHandler(loadAppStateSuccess).clearCategoryAmount();
     }
 
   }
-   google.script.run.withSuccessHandler(loadCategoriesSuccess).loadCategories();
+   google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).loadAppState();
 
 }]);
