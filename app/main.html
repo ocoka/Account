@@ -135,6 +135,7 @@ body {
   text-align: center;
   background-color: #000;
   z-index: 9;
+  box-sizing: border-box;
 }
 .shutter:before {
   display: inline-block;
@@ -143,9 +144,89 @@ body {
   height: 100%;
   vertical-align: middle;
 }
+.shutter.shutter_modal {
+  background-color: rgba(223,223,223,0.3);
+  padding: 1em;
+}
+.shutter.shutter_modal:before {
+  display: none;
+}
 .shutter__message {
   display: inline-block;
   vertical-align: middle;
+}
+.modal {
+  box-sizing: border-box;
+  min-width: 300px;
+  max-width: 100%;
+  margin: 0 auto;
+  background-color: #e6e4e0;
+  padding-bottom: 0.8em;
+  max-height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  align-content: stretch;
+}
+.modal__title {
+  flex: 0 0 29px;
+  padding: 0.2em;
+  background-color: #3f51b5;
+  color: #fff;
+  font: normal normal 300 16pt/1 "Roboto";
+  box-sizing: border-box;
+}
+.modal__body {
+  flex: 1 1 auto;
+  margin: 0.8em 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.modal__controls {
+  flex: 0 0 36px;
+  box-sizing: border-box;
+}
+.contractors {
+  margin-left: -0.4em;
+}
+.contractors__contractor {
+  background-color: #fff;
+  border: none;
+  width: 47%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  margin: 0 0 0.4em 0.4em;
+  text-align: left;
+  padding: 0.4em;
+  min-width: 285px;
+  max-width: 370px;
+  font: normal normal 300 16pt/1 "Roboto";
+}
+.contractors__contractor:last-child {
+  margin-bottom: 0;
+}
+.contractor__image {
+  width: 50%;
+  padding-bottom: 32%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  display: inline-block;
+  max-width: 120px;
+  vertical-align: top;
+}
+.contractor__content {
+  display: inline-block;
+  vertical-align: top;
+}
+.contractor__title {
+  background-color: rgba(194,236,32,0.58);
+  border-radius: 5px;
+  padding-left: 0.4em;
+  padding-right: 0.4em;
+  white-space: nowrap;
 }
 .message__text {
   color: #fff;
@@ -364,9 +445,33 @@ body {
           </div>
         </div>
       </div>
-      <div ng-if="state.stage=='fields'" class="fields layout__fields"><input type="number" min="0" step="0.01" ng-model="state.sum" class="fields__sum"/><input type="button" value="PREV" ng-click="state.stage='categories'" class="btn fields__btn"/><input type="button" value="NEXT" ng-click="state.stage='additionals'" class="fields__btn"/>
+      <div ng-if="state.stage=='contactors'" class="contactors layout__contactors"><input type="number" min="0" step="0.01" ng-model="state.sum" class="contactors__sum"/><input type="button" value="PREV" ng-click="state.stage='categories'" class="btn contactors__btn"/><input type="button" value="NEXT" ng-click="state.stage='additionals'" class="contactors__btn"/>
       </div>
       <div ng-if="state.stage=='additionals'" class="additionals layout__additionals"><input type="button" value="BEGIN" ng-click="state.stage='categories'" class="additionals__btn btn"/>
+      </div>
+    </div>
+    <div ng-show="!(shutter.loading||shutter.show)" class="ng-hide shutter shutter_modal">
+      <div class="mdl-shadow--6dp modal">
+        <div class="modal__title">Select a contractor
+        </div>
+        <div class="body modal__body">
+          <div class="contractors">
+            <button o-mdl="o-mdl" ng-repeat="(conId,contractor) in contractors" class="contractor contractors__contractor mdl-shadow--2dp">
+              <div ng-style="{'background-image':'url({{contractor.image}})'}" class="contractor__image">
+              </div>
+              <div class="contractor__content">
+                <div ng-bind="contractor.name" class="contractor__title">
+                </div>
+                <div ng-bind="contractor.current" class="contractor__data">
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+        <div class="controls modal__controls">
+          <button class="controls__control mdl-button mdl-button--colored mdl-button--raised mdl-js-button mdl-js-ripple-effect">BACK 
+          </button>
+        </div>
       </div>
     </div>
     <div ng-hide="!(shutter.loading||shutter.show)" class="shutter">
@@ -393,7 +498,41 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
       componentHandler.upgradeElement(iElement.get(0));
     }
   }
-}).directive("oDrawer",function(){
+}).factory("oModalSvc", ["$rootScope","$q","$templateRequest","$compile",function oModalSvc($root,$q,$tpl,$compile){
+  oModalPromise.view=null;
+  var q=null;
+  function oModalPromise(options){
+    if (oModalPromise.view==null) console.warning('oModalSvc: No view directive registered');
+    if (q!=null) console.warning('oModalSvc: Already active');
+    if (options.template==null) throw new Error("oModalSvc: template required");
+    var template=$tpl(options.template);
+    var scope=$root.$new(true);
+    oModalPromise.view.append(template);
+    $compile(template)(scope);
+    if (options.scope!=null){
+      angular.extend(scope,options.scope);
+    }
+    scope.$close=function(message){
+      oModalPromise.view.empty();
+      scope.$destroy();
+      q.resolve(message);
+      q=null;
+    };
+    q=$q.defer();
+    return q.promise;
+  }
+  return oModalPromise;
+}]).directive("oView",['oModalSvc',function(oModalSvc){
+  return {
+    priority: 0,
+    restrict: 'EA',
+    scope: false,
+    link: function oViewPostLink(scope, iElement, iAttrs) {
+      oModalSvc.view=iElement;
+    }
+  };
+}])
+.directive("oDrawer",function(){
   var deferScrollRecalc=null;
   return {
     priority: 0,
@@ -472,6 +611,7 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
           return p;
         }
         ,{});
+      $root.contractors=$scope.contractors;
 
     }else{
       showError(answer.data);

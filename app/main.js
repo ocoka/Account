@@ -11,7 +11,41 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
       componentHandler.upgradeElement(iElement.get(0));
     }
   }
-}).directive("oDrawer",function(){
+}).factory("oModalSvc", ["$rootScope","$q","$templateRequest","$compile",function oModalSvc($root,$q,$tpl,$compile){
+  oModalPromise.view=null;
+  var q=null;
+  function oModalPromise(options){
+    if (oModalPromise.view==null) console.warning('oModalSvc: No view directive registered');
+    if (q!=null) console.warning('oModalSvc: Already active');
+    if (options.template==null) throw new Error("oModalSvc: template required");
+    var template=$tpl(options.template);
+    var scope=$root.$new(true);
+    oModalPromise.view.append(template);
+    $compile(template)(scope);
+    if (options.scope!=null){
+      angular.extend(scope,options.scope);
+    }
+    scope.$close=function(message){
+      oModalPromise.view.empty();
+      scope.$destroy();
+      q.resolve(message);
+      q=null;
+    };
+    q=$q.defer();
+    return q.promise;
+  }
+  return oModalPromise;
+}]).directive("oView",['oModalSvc',function(oModalSvc){
+  return {
+    priority: 0,
+    restrict: 'EA',
+    scope: false,
+    link: function oViewPostLink(scope, iElement, iAttrs) {
+      oModalSvc.view=iElement;
+    }
+  };
+}])
+.directive("oDrawer",function(){
   var deferScrollRecalc=null;
   return {
     priority: 0,
@@ -90,6 +124,7 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
           return p;
         }
         ,{});
+      $root.contractors=$scope.contractors;
 
     }else{
       showError(answer.data);

@@ -45,16 +45,29 @@ html
             +e.BUTTON.clear.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect.ng-hide(o-mdl,ng-show!="category.amount>0",ng-click!="ctl.clearCategoryAmount(category);amount=''") CLEAR
             +e.BUTTON.spend.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.spendOnCategory(category,amount);amount=''") ADD
           
-      +layout("fields")
+      +layout("contactors")
         +e.INPUT.sum(type="number",min="0",step="0.01",ng-model="state.sum") 
         +b.INPUT.btn.__btn(type="button",value="PREV",ng-click="state.stage='categories'")
         +e.INPUT.btn(type="button",value="NEXT",ng-click="state.stage='additionals'")
       +layout("additionals")
         +b.INPUT.btn.__btn(type="button",value="BEGIN",ng-click="state.stage='categories'")
+    +b.shutter_modal.ng-hide(ng-show="!(shutter.loading||shutter.show)")
+      +b.modal.mdl-shadow--6dp
+        +e.title Select a contractor
+        +b.body.__body
+          +b.contractors
+            +b.BUTTON.contractor.__contractor.mdl-shadow--2dp(o-mdl,ng-repeat="(conId,contractor) in contractors")
+              +e.image(ng-style="{'background-image':'url({{contractor.image}})'}")
+              +e.content
+                +e.title(ng-bind="contractor.name")
+                +e.data(ng-bind="contractor.current")
+        +b.controls.__controls
+          +e.BUTTON.control.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect BACK 
     +b.shutter(ng-hide="!(shutter.loading||shutter.show)")
       +b.message.__message
         +e.spinner.mdl-spinner.mdl-js-spinner(ng-class="{'is-active':shutter.loading}")
         +e.text(ng-bind="shutter.message.text",ng-class="{'message__text_error':shutter.message.isError}")
+    
     script(src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js")
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js")
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular-animate.js")
