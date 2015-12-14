@@ -9,7 +9,10 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900,900italic&amp;subset=latin,cyrillic,cyrillic-ext" rel="stylesheet" type="text/css">
     <script src="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.min.js"></script>
-    <style type="text/css">html,
+    <style type="text/css">.ng-hide:not(.ng-hide-animate) {
+  display: none !important;
+}
+html,
 body,
 .layout {
   width: 100%;
@@ -35,6 +38,9 @@ body {
   width: 150px;
   margin: 1rem 1rem;
 }
+.categories__category >.mdl-card__supporting-text {
+  padding: 0 16px;
+}
 .categories__category >.mdl-card__title {
   height: 140px;
   background-position: 50% 0%;
@@ -59,9 +65,14 @@ body {
 .category__clear {
   float: right;
 }
+.category__current {
+  float: right;
+}
 .prop {
   font-family: 'Roboto';
   display: inline;
+  white-space: nowrap;
+  line-height: 1.6;
 }
 .prop__name {
   font-weight: 300;
@@ -72,27 +83,28 @@ body {
   margin-right: -0.4em;
 }
 .prop__value {
-  background-color: #ec2b58;
+  background-color: #5a5a5a;
   vertical-align: middle;
   color: #fff;
-  border-radius: 50%;
-  display: inline-block;
-  line-height: 0;
+  border-radius: 5px;
+  display: inline;
   box-sizing: border-box;
-  font-weight: 600;
-  width: 2.2em;
-  height: 2.2em;
+  font-weight: 500;
   text-align: center;
-  padding: 1.1em 0;
+  padding: 0.1em 0.3em;
 }
-.prop__value.prop__value_big,
-.prop__value.prop__value_biggreen {
-  width: 3em;
-  height: 3em;
-  padding: 1.5em 0;
+.prop__value.prop__value_big-green,
+.prop__value.prop__value_big-red {
+  padding: 0.2em 0.4em;
+  border-radius: 10px;
 }
-.prop__value.prop__value_biggreen {
+.prop__value.prop__value_green,
+.prop__value.prop__value_big-green {
   background-color: #5fa347;
+}
+.prop__value.prop__value_red,
+.prop__value.prop__value_big-red {
+  background-color: #ec2b58;
 }
 .drawer {
   position: fixed;
@@ -145,7 +157,7 @@ body {
   vertical-align: middle;
 }
 .shutter.shutter_modal {
-  background-color: rgba(223,223,223,0.3);
+  background-color: rgba(0,0,0,0.64);
   padding: 1em;
 }
 .shutter.shutter_modal:before {
@@ -204,13 +216,11 @@ body {
   min-width: 285px;
   max-width: 370px;
   font: normal normal 300 16pt/1 "Roboto";
-}
-.contractors__contractor:last-child {
-  margin-bottom: 0;
+  border-radius: 4px;
 }
 .contractor__image {
   width: 50%;
-  padding-bottom: 32%;
+  padding-bottom: 30%;
   background-repeat: no-repeat;
   background-size: contain;
   display: inline-block;
@@ -228,6 +238,10 @@ body {
   padding-right: 0.4em;
   white-space: nowrap;
 }
+.contractor__data {
+  margin-top: 1em;
+  font: normal normal 600 20pt/1 "Roboto";
+}
 .message__text {
   color: #fff;
 }
@@ -242,6 +256,10 @@ body {
   border-radius: 4px;
   padding: 0.2em 0.4em;
   margin-right: 0.4em;
+}
+.message__controls {
+  display: block;
+  margin-top: 1em;
 }
 /*layout and elements */
 .full-width,
@@ -411,12 +429,41 @@ body {
     </style>
   </head>
   <body ng-app="oAccount">
-    <div ng-controller="oOutcomes as ctl" class="layout">
-      <div o-drawer="o-drawer" ng-if="drawer.show" class="drawer layout__drawer mdl-shadow--2dp">
-        <div class="drawer__props">
-          <div ng-if="overallOutcome&gt;0" class="prop"><span class="prop__name">Общий расход</span><span ng-bind="overallOutcome" class="prop__value prop__value_big"></span>
+    <script type="text/ng-template" id="modal.jade">
+      <div ng-show="!(shutter.loading||shutter.show)" class="ng-hide shutter shutter_modal">
+        <div class="mdl-shadow--6dp modal">
+          <div class="modal__title">Select a contractor
           </div>
-          <div ng-if="overallIncome&gt;0" class="prop"><span class="prop__name">Общий&nbsp;&nbsp;&nbsp;доход</span><span ng-bind="overallIncome" class="prop__value prop__value_biggreen"></span>
+          <div class="body modal__body">
+            <div class="contractors">
+              <button o-mdl ng-repeat="contractor in contractors track by contractor.id" ng-click="$close(contractor)" class="contractor contractors__contractor mdl-shadow--2dp">
+                <div ng-style="{'background-image':'url({{contractor.image}})'}" class="contractor__image">
+                </div>
+                <div class="contractor__content">
+                  <div ng-bind="contractor.name" class="contractor__title">
+                  </div>
+                  <div ng-bind="contractor.current*contractor.type" class="contractor__data">
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+          <div class="controls modal__controls">
+            <button ng-click="$close()" class="controls__control mdl-button mdl-button--colored mdl-button--raised mdl-js-button mdl-js-ripple-effect">BACK 
+            </button>
+          </div>
+        </div>
+      </div>
+    </script>
+    <div ng-controller="oOutcomes as ctl" class="layout">
+      <div o-drawer ng-show="drawer.show" class="drawer layout__drawer mdl-shadow--2dp ng-hide">
+        <div ng-click="showDateInput=true" class="drawer__props">
+          <div ng-show="overallOutcome>0" class="ng-hide prop"><span class="prop__name">Итог</span><span ng-bind="overallOutcome" class="prop__value prop__value_big-red"></span>
+          </div>
+          <div ng-show="overallIncome>0" class="ng-hide prop"><span class="prop__name">Итог</span><span ng-bind="overallIncome" class="prop__value prop__value_big-green"></span>
+          </div>
+          <div ng-show="showDateInput" class="ng-hide prop">
+            <input type="date" ng-model="operationDate">
           </div>
         </div>
         <div class="drawer__controls">
@@ -425,60 +472,38 @@ body {
         </div>
       </div>
       <div ng-if="state.stage=='categories'" class="categories layout__categories">
-        <div o-mdl="o-mdl" ng-repeat="(catId,category) in categories" class="categories__category category mdl-card mdl-shadow--2dp">
+        <div o-mdl ng-repeat="category in categories track by category.id" ng-hide="category.type==1 && overallOutcome>0 || category.type==-1 && overallIncome>0" class="categories__category category mdl-card mdl-shadow--2dp">
           <div ng-style="{'background-image':'url({{category.image}})'}" class="mdl-card__title">
             <h1 ng-bind="category.name" class="mdl-card__title-text"></h1>
           </div>
           <div class="mdl-card__supporting-text">
-            <div ng-show="category.amount>0" class="category__prop ng-hide prop"><span class="prop__name">Итого</span><span ng-bind="category.amount" ng-class="{'prop__value_biggreen':category.type==1}" class="prop__value"></span>
+            <div ng-show="category.current!=0" class="category__prop ng-hide prop"><span class="prop__name">Месяц</span><span ng-bind="category.type*category.current" class="prop__value"></span>
+            </div>
+            <div ng-show="category.amount>0" class="category__prop ng-hide prop"><span class="prop__name">Расчет</span><span ng-bind="category.amount" ng-class="{'prop__value_green':category.type==1,'prop__value_red':category.type==-1}" class="prop__value"></span>
             </div>
           </div>
           <div class="mdl-card__actions">
             <div o-mdl class="mdl-textfield mdl-js-textfield">
-              <input type="number" id="catId" ng-model="amount" class="mdl-textfield__input">
-              <label for="catId" class="mdl-textfield__label">Price</label>
+              <input type="number" id="category.id" ng-model="amount" class="mdl-textfield__input">
+              <label for="category.id" class="mdl-textfield__label">Price</label>
             </div>
-            <button o-mdl="o-mdl" ng-show="category.amount>0" ng-click="ctl.clearCategoryAmount(category);amount=''" class="category__clear mdl-button mdl-button--accent mdl-button--raised mdl-js-button mdl-js-ripple-effect ng-hide">CLEAR
+            <button o-mdl ng-show="category.amount>0" ng-click="ctl.clearCategoryAmount(category);amount=''" class="category__clear mdl-button mdl-button--accent mdl-button--raised mdl-js-button mdl-js-ripple-effect ng-hide">CLEAR
             </button>
-            <button o-mdl="o-mdl" ng-click="ctl.spendOnCategory(category,amount);amount=''" class="category__spend mdl-button mdl-button--colored mdl-button--raised mdl-js-button mdl-js-ripple-effect">ADD
-            </button>
-          </div>
-        </div>
-      </div>
-      <div ng-if="state.stage=='contactors'" class="contactors layout__contactors"><input type="number" min="0" step="0.01" ng-model="state.sum" class="contactors__sum"/><input type="button" value="PREV" ng-click="state.stage='categories'" class="btn contactors__btn"/><input type="button" value="NEXT" ng-click="state.stage='additionals'" class="contactors__btn"/>
-      </div>
-      <div ng-if="state.stage=='additionals'" class="additionals layout__additionals"><input type="button" value="BEGIN" ng-click="state.stage='categories'" class="additionals__btn btn"/>
-      </div>
-    </div>
-    <div ng-show="!(shutter.loading||shutter.show)" class="ng-hide shutter shutter_modal">
-      <div class="mdl-shadow--6dp modal">
-        <div class="modal__title">Select a contractor
-        </div>
-        <div class="body modal__body">
-          <div class="contractors">
-            <button o-mdl="o-mdl" ng-repeat="(conId,contractor) in contractors" class="contractor contractors__contractor mdl-shadow--2dp">
-              <div ng-style="{'background-image':'url({{contractor.image}})'}" class="contractor__image">
-              </div>
-              <div class="contractor__content">
-                <div ng-bind="contractor.name" class="contractor__title">
-                </div>
-                <div ng-bind="contractor.current" class="contractor__data">
-                </div>
-              </div>
+            <button o-mdl ng-click="ctl.spendOnCategory(category,amount);amount=''" class="category__spend mdl-button mdl-button--colored mdl-button--raised mdl-js-button mdl-js-ripple-effect">ADD
             </button>
           </div>
         </div>
-        <div class="controls modal__controls">
-          <button class="controls__control mdl-button mdl-button--colored mdl-button--raised mdl-js-button mdl-js-ripple-effect">BACK 
-          </button>
-        </div>
       </div>
     </div>
+    <o-view></o-view>
     <div ng-hide="!(shutter.loading||shutter.show)" class="shutter">
       <div class="message shutter__message">
         <div ng-class="{'is-active':shutter.loading}" class="mdl-js-spinner mdl-spinner message__spinner">
         </div>
         <div ng-bind="shutter.message.text" ng-class="{'message__text_error':shutter.message.isError}" class="message__text">
+        </div>
+        <div ng-show="!shutter.loading" class="message__controls ng-hide">
+          <button ng-click="shutter.show=false" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect">OK</button>
         </div>
       </div>
     </div>
@@ -502,13 +527,19 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
   oModalPromise.view=null;
   var q=null;
   function oModalPromise(options){
-    if (oModalPromise.view==null) console.warning('oModalSvc: No view directive registered');
-    if (q!=null) console.warning('oModalSvc: Already active');
+    if (oModalPromise.view==null) {
+      throw new Error('oModalSvc: No view directive registered');
+    }
+    if (q!=null) throw new Error('oModalSvc: Already active');
     if (options.template==null) throw new Error("oModalSvc: template required");
-    var template=$tpl(options.template);
+    var template=null;
     var scope=$root.$new(true);
-    oModalPromise.view.append(template);
-    $compile(template)(scope);
+    $tpl(options.template).then(function(tpl){template=angular.element(tpl);
+      oModalPromise.view.append(template);
+      $compile(template)(scope);
+    },function(data){
+      console.log(data);
+    });
     if (options.scope!=null){
       angular.extend(scope,options.scope);
     }
@@ -555,28 +586,36 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
       });
     }
   }
-}).controller("oOutcomes",["$scope",'$rootScope',function($scope,$root){
+}).controller("oOutcomes",["$scope",'$rootScope',"oModalSvc",function($scope,$root,oModalSvc){
 
   /*----------*/
   function recalcOverallAmount(){
     $scope.overallIncome=0;
     $scope.overallOutcome=0;
-    for (var catId in $scope.categories){
-      var pInt=parseInt($scope.categories[catId].amount);
+    $scope.categories.forEach(function(cat){
+      var pInt=parseInt(cat.amount);
       if (!isNaN(pInt)){
-        if($scope.categories[catId].type==1){
+        cat.amount=pInt;
+        if(cat.type==1){
           $scope.overallIncome+=pInt;
         }else {
           $scope.overallOutcome+=pInt;
         }
+      }else{
+        cat.amount=0;
       }
-    }
+    });
   }
 
   function showError(text){
+    $root.shutter.loading=false;
     $root.shutter.message.isError=true;
     $root.shutter.message.text=text;
     $root.shutter.show=true;
+  }
+  function showLoading(){
+    clearError();
+    $root.shutter.loading=true;
   }
   function clearError(){
     $root.shutter.message.isError=false;
@@ -594,60 +633,93 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
   }
   function genericFailure(error){
     showError(error.message);
+    $scope.$apply();
   }
 
   function loadAppStateSuccess(answer){
     if (answer.result===0){
-      $scope.categories=answer.data.categories.reduce(
-        function(p,n){
-          p[n.id]=n;
-          return p;
-        }
-        ,{});
-      checkDrawer();
-      $scope.contractors=answer.data.contractors.reduce(
-        function(p,n){
-          p[n.id]=n;
-          return p;
-        }
-        ,{});
-      $root.contractors=$scope.contractors;
-
+      if (answer.data.categories!=null){
+        $scope.categories=answer.data.categories;
+        checkDrawer();
+      }
+      if (answer.data.contractors!=null){
+        $scope.contractors=answer.data.contractors;
+      }
     }else{
       showError(answer.data);
     }
+    $root.shutter.loading=false;
     $scope.$apply();
   }
   /*----------*/
-  $scope.state={sum:0,stage:'categories',fin:null,category:null};
-  $scope.categories={};
-  $scope.contractors={};
+  $scope.state={stage:'categories'};
+  $scope.categories=[];
+  $scope.contractors=[];
   $scope.overallIncome=0;
   $scope.overallOutcome=0;
-  $root.shutter.loading=false;
+  $scope.operationDate=new Date();
+
   /*----------*/
 
   /*----------*/
   this.spendOnCategory=function spendOnCategory(category,amount){
     amount=parseInt(amount);
     if (amount>0){
-      google.script.run.withSuccessHandler(loadAppStateSuccess).spendOnCategory(category.idx,amount);
+      category.amount+=amount;
     }
+    checkDrawer();
   }
+
   this.checkOut=function checkOut(){
-    if ($scope.overallAmount()>0){
-      google.script.run.withSuccessHandler(loadAppStateSuccess).checkOut();
-    }
+    recalcOverallAmount();
+      if ($scope.overallIncome>0){
+          oModalSvc({template:"modal.jade",scope:{contractors:$scope.contractors}}).then(function(result){
+              if (result!=null){
+                var preparedData=[];
+                $scope.categories.forEach(function(cat){
+                  if (cat.type==1 && cat.amount>0){
+                    preparedData.push({id:cat.id,amount:cat.amount});
+                  }
+                });
+                  showLoading();
+                  google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut($scope.operationDate.toISOString(),preparedData,result.id);
+              }
+          });
+      }else if($scope.overallOutcome>0){
+        var preparedData=[];
+        $scope.categories.forEach(function(cat){
+          if (cat.type==-1 && cat.amount>0){
+            preparedData.push({id:cat.id,amount:cat.amount});
+          }
+        });
+        var avalContractors=$scope.contractors.filter(function(con){return (con.current!=0 && con.type==-1 || con.type==1)});
+        if (avalContractors.length>0){
+          oModalSvc({template:"modal.jade",scope:{contractors:avalContractors}}).then(function(result){
+              if (result!=null){
+                showLoading();
+                google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut($scope.operationDate.toISOString(),preparedData,result.id);
+              }
+            });
+        }else{
+          showLoading();
+          google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut($scope.operationDate.toISOString(),preparedData,null);
+        }
+      }
+      //google.script.run.withSuccessHandler(loadAppStateSuccess).checkOut();
+
   }
 
   this.clearCategoryAmount=function clearCategoryAmount(category){
     if (category!=null){
-      google.script.run.withSuccessHandler(loadAppStateSuccess).clearCategoryAmount(category.idx);
+      category.amount=0;
     }else{
-      google.script.run.withSuccessHandler(loadAppStateSuccess).clearCategoryAmount();
+      $scope.categories.forEach(function(cat){
+        cat.amount=0;
+      });
     }
-
+    checkDrawer();
   }
+
    google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).loadAppState();
 
 }]);

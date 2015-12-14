@@ -3,6 +3,18 @@ include bemto/bemto
 mixin layout(name)
   +b()(class=name+" __"+name,ng-if="state.stage=='"+name+"'")
     block
+
+mixin gettpl(file)
+  -
+    var j=process.mainModule.require('/usr/lib/node_modules/jade');
+    var path=process.mainModule.require('path');
+    var f=j.compileFile(path.join(path.dirname(filename),file),{pretty:true});
+    var html=f({});
+  script(type="text/ng-template",id="#{file}")!= html
+
+mixin ngs(file)
+  script(type="text/ng-template",id="#{file}")
+    block
   
 doctype
 html
@@ -18,55 +30,46 @@ html
     style(type="text/css")
       include main.css
   body(ng-app="oAccount")
+    +ngs("modal.jade")
+      include modal.jade
     +b.layout(ng-controller="oOutcomes as ctl")
-      +b.drawer.__drawer.mdl-shadow--2dp(o-drawer,ng-if="drawer.show")
-        +e.props
-          +b.prop(ng-if="overallOutcome>0")
-            +e.SPAN.name Общий расход
-            +e.SPAN.value_big(ng-bind="overallOutcome")
-          +b.prop(ng-if="overallIncome>0")
-            +e.SPAN.name Общий&nbsp;&nbsp;&nbsp;доход
-            +e.SPAN.value_biggreen(ng-bind="overallIncome")
+      +b.drawer.__drawer.mdl-shadow--2dp.ng-hide(o-drawer,ng-show="drawer.show")
+        +e.props(ng-click="showDateInput=true")
+          +b.prop.ng-hide(ng-show!="overallOutcome>0")
+            +e.SPAN.name Итог
+            +e.SPAN.value_big-red(ng-bind="overallOutcome")
+          +b.prop.ng-hide(ng-show!="overallIncome>0")
+            +e.SPAN.name Итог
+            +e.SPAN.value_big-green(ng-bind="overallIncome")
+          +b.prop.ng-hide(ng-show="showDateInput")
+            input(type="date",ng-model="operationDate")
         +e.controls
           button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.checkOut()") CHECKOUT
           button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.clearCategoryAmount()") CLEAR
       +layout("categories")(ng-class="{'w-drawer':drawer.show}")
-        +b.category.__category.mdl-card.mdl-shadow--2dp(o-mdl,ng-repeat="(catId,category) in categories")
+        +b.category.__category.mdl-card.mdl-shadow--2dp(o-mdl,ng-repeat="category in categories track by category.id",ng-hide!="category.type==1 && overallOutcome>0 || category.type==-1 && overallIncome>0")
           div.mdl-card__title(ng-style="{'background-image':'url({{category.image}})'}")
             h1.mdl-card__title-text(ng-bind="category.name")
           div.mdl-card__supporting-text
+            +b.prop.__prop.ng-hide(ng-show!="category.current!=0")
+              +e.SPAN.name Месяц
+              +e.SPAN.value(ng-bind="category.type*category.current")
             +b.prop.__prop.ng-hide(ng-show!="category.amount>0")
-              +e.SPAN.name Итого
-              +e.SPAN.value(ng-bind="category.amount",ng-class="{'prop__value_biggreen':category.type==1}")
+              +e.SPAN.name Расчет
+              +e.SPAN.value(ng-bind="category.amount",ng-class="{'prop__value_green':category.type==1,'prop__value_red':category.type==-1}")
           div.mdl-card__actions
             div.mdl-textfield.mdl-js-textfield(o-mdl)
-              input.mdl-textfield__input(type="number",id="catId",ng-model="amount")
-              label.mdl-textfield__label(for="catId") Price
+              input.mdl-textfield__input(type="number",id="category.id",ng-model="amount")
+              label.mdl-textfield__label(for="category.id") Price
             +e.BUTTON.clear.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect.ng-hide(o-mdl,ng-show!="category.amount>0",ng-click!="ctl.clearCategoryAmount(category);amount=''") CLEAR
             +e.BUTTON.spend.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.spendOnCategory(category,amount);amount=''") ADD
-          
-      +layout("contactors")
-        +e.INPUT.sum(type="number",min="0",step="0.01",ng-model="state.sum") 
-        +b.INPUT.btn.__btn(type="button",value="PREV",ng-click="state.stage='categories'")
-        +e.INPUT.btn(type="button",value="NEXT",ng-click="state.stage='additionals'")
-      +layout("additionals")
-        +b.INPUT.btn.__btn(type="button",value="BEGIN",ng-click="state.stage='categories'")
-    +b.shutter_modal.ng-hide(ng-show="!(shutter.loading||shutter.show)")
-      +b.modal.mdl-shadow--6dp
-        +e.title Select a contractor
-        +b.body.__body
-          +b.contractors
-            +b.BUTTON.contractor.__contractor.mdl-shadow--2dp(o-mdl,ng-repeat="(conId,contractor) in contractors")
-              +e.image(ng-style="{'background-image':'url({{contractor.image}})'}")
-              +e.content
-                +e.title(ng-bind="contractor.name")
-                +e.data(ng-bind="contractor.current")
-        +b.controls.__controls
-          +e.BUTTON.control.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect BACK 
+    o-view
     +b.shutter(ng-hide="!(shutter.loading||shutter.show)")
       +b.message.__message
         +e.spinner.mdl-spinner.mdl-js-spinner(ng-class="{'is-active':shutter.loading}")
         +e.text(ng-bind="shutter.message.text",ng-class="{'message__text_error':shutter.message.isError}")
+        +e.controls.ng-hide(ng-show="!shutter.loading")
+          button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(ng-click!="shutter.show=false") OK
     
     script(src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js")
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js")

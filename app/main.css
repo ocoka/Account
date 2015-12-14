@@ -1,3 +1,6 @@
+.ng-hide:not(.ng-hide-animate) {
+  display: none !important;
+}
 html,
 body,
 .layout {
@@ -24,6 +27,9 @@ body {
   width: 150px;
   margin: 1rem 1rem;
 }
+.categories__category >.mdl-card__supporting-text {
+  padding: 0 16px;
+}
 .categories__category >.mdl-card__title {
   height: 140px;
   background-position: 50% 0%;
@@ -48,9 +54,14 @@ body {
 .category__clear {
   float: right;
 }
+.category__current {
+  float: right;
+}
 .prop {
   font-family: 'Roboto';
   display: inline;
+  white-space: nowrap;
+  line-height: 1.6;
 }
 .prop__name {
   font-weight: 300;
@@ -61,27 +72,28 @@ body {
   margin-right: -0.4em;
 }
 .prop__value {
-  background-color: #ec2b58;
+  background-color: #5a5a5a;
   vertical-align: middle;
   color: #fff;
-  border-radius: 50%;
-  display: inline-block;
-  line-height: 0;
+  border-radius: 5px;
+  display: inline;
   box-sizing: border-box;
-  font-weight: 600;
-  width: 2.2em;
-  height: 2.2em;
+  font-weight: 500;
   text-align: center;
-  padding: 1.1em 0;
+  padding: 0.1em 0.3em;
 }
-.prop__value.prop__value_big,
-.prop__value.prop__value_biggreen {
-  width: 3em;
-  height: 3em;
-  padding: 1.5em 0;
+.prop__value.prop__value_big-green,
+.prop__value.prop__value_big-red {
+  padding: 0.2em 0.4em;
+  border-radius: 10px;
 }
-.prop__value.prop__value_biggreen {
+.prop__value.prop__value_green,
+.prop__value.prop__value_big-green {
   background-color: #5fa347;
+}
+.prop__value.prop__value_red,
+.prop__value.prop__value_big-red {
+  background-color: #ec2b58;
 }
 .drawer {
   position: fixed;
@@ -134,7 +146,7 @@ body {
   vertical-align: middle;
 }
 .shutter.shutter_modal {
-  background-color: rgba(223,223,223,0.3);
+  background-color: rgba(0,0,0,0.64);
   padding: 1em;
 }
 .shutter.shutter_modal:before {
@@ -193,13 +205,11 @@ body {
   min-width: 285px;
   max-width: 370px;
   font: normal normal 300 16pt/1 "Roboto";
-}
-.contractors__contractor:last-child {
-  margin-bottom: 0;
+  border-radius: 4px;
 }
 .contractor__image {
   width: 50%;
-  padding-bottom: 32%;
+  padding-bottom: 30%;
   background-repeat: no-repeat;
   background-size: contain;
   display: inline-block;
@@ -217,6 +227,10 @@ body {
   padding-right: 0.4em;
   white-space: nowrap;
 }
+.contractor__data {
+  margin-top: 1em;
+  font: normal normal 600 20pt/1 "Roboto";
+}
 .message__text {
   color: #fff;
 }
@@ -231,6 +245,10 @@ body {
   border-radius: 4px;
   padding: 0.2em 0.4em;
   margin-right: 0.4em;
+}
+.message__controls {
+  display: block;
+  margin-top: 1em;
 }
 /*layout and elements */
 .full-width,
