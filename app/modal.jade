@@ -1,0 +1,13 @@
+include bemto/bemto
++b.shutter_modal.ng-hide(ng-show="!(shutter.loading||shutter.show)")
+  +b.modal.mdl-shadow--6dp
+    +e.title Select a contractor
+    +b.body.__body
+      +b.contractors
+        +b.BUTTON.contractor.__contractor.mdl-shadow--2dp(o-mdl,ng-repeat="contractor in contractors track by contractor.id",ng-click="$close(contractor)")
+          +e.image(ng-style="{'background-image':'url({{contractor.image}})'}")
+          +e.content
+            +e.title(ng-bind="contractor.name")
+            +e.data(ng-bind="contractor.current*contractor.type")
+    +b.controls.__controls
+      +e.BUTTON.control.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(ng-click="$close()") BACK 
