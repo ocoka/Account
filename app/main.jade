@@ -1,8 +1,5 @@
 //output:main.html
 include bemto/bemto
-mixin layout(name)
-  +b()(class=name+" __"+name,ng-if="state.stage=='"+name+"'")
-    block
 
 mixin gettpl(file)
   -
@@ -32,37 +29,41 @@ html
   body(ng-app="oAccount")
     +ngs("modal.jade")
       include modal.jade
-    +b.layout(ng-controller="oOutcomes as ctl")
+    +b.workarea(ng-controller="oOutcomes as ctl")
       +b.drawer.__drawer.mdl-shadow--2dp.ng-hide(o-drawer,ng-show="drawer.show")
         +e.props(ng-click="showDateInput=true")
-          +b.prop.ng-hide(ng-show!="overallOutcome>0")
-            +e.SPAN.name Итог
-            +e.SPAN.value_big-red(ng-bind="overallOutcome")
-          +b.prop.ng-hide(ng-show!="overallIncome>0")
-            +e.SPAN.name Итог
-            +e.SPAN.value_big-green(ng-bind="overallIncome")
+          +b.prop.ng-hide(ng-show!="totalRedSum>0")
+            +e.SPAN.name Расход
+            +e.SPAN.value_big-red(ng-bind="totalRedSum")
+          +b.prop.ng-hide(ng-show!="totalGreeSum>0")
+            +e.SPAN.name Доход
+            +e.SPAN.value_big-green(ng-bind="totalGreeSum")
           +b.prop.ng-hide(ng-show="showDateInput")
             input(type="date",ng-model="operationDate")
         +e.controls
           button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.checkOut()") CHECKOUT
-          button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.clearCategoryAmount()") CLEAR
-      +layout("categories")(ng-class="{'w-drawer':drawer.show}")
-        +b.category.__category.mdl-card.mdl-shadow--2dp(o-mdl,ng-repeat="category in categories track by category.id",ng-hide!="category.type==1 && overallOutcome>0 || category.type==-1 && overallIncome>0")
-          div.mdl-card__title(ng-style="{'background-image':'url({{category.image}})'}")
-            h1.mdl-card__title-text(ng-bind="category.name")
-          div.mdl-card__supporting-text
-            +b.prop.__prop.ng-hide(ng-show!="category.current!=0")
-              +e.SPAN.name Месяц
-              +e.SPAN.value(ng-bind="category.type*category.current")
-            +b.prop.__prop.ng-hide(ng-show!="category.amount>0")
-              +e.SPAN.name Расчет
-              +e.SPAN.value(ng-bind="category.amount",ng-class="{'prop__value_green':category.type==1,'prop__value_red':category.type==-1}")
-          div.mdl-card__actions
-            div.mdl-textfield.mdl-js-textfield(o-mdl)
-              input.mdl-textfield__input(type="number",id="category.id",ng-model="amount")
-              label.mdl-textfield__label(for="category.id") Price
-            +e.BUTTON.clear.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect.ng-hide(o-mdl,ng-show!="category.amount>0",ng-click!="ctl.clearCategoryAmount(category);amount=''") CLEAR
-            +e.BUTTON.spend.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.spendOnCategory(category,amount);amount=''") ADD
+          button.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.clearAllAmount()") CLEAR
+      +e.controls
+        +e.BUTTON.control.mdl-button.mdl-js-button.mdl-button--colored.mdl-button--accent.mdl-js-ripple-effect(o-mdl,ng-repeat="nextRoute in stageRoutes track by nextRoute.id ",ng-click!="state.stage=nextRoute.id")
+          span(ng-bind="nextRoute.name")
+      +b.layout
+        +b.categories.__categories(ng-repeat="route in stageRoutes track by route.id",ng-if="state.stage==route.id")
+          +b.category.__category.mdl-card.mdl-shadow--2dp(o-mdl,ng-repeat="category in cardsBox[state.stage] track by category.id")
+            div.mdl-card__title(ng-style="{'background-image':'url({{category.image}})'}")
+              h1.mdl-card__title-text(ng-bind="category.name")
+            div.mdl-card__supporting-text
+              +b.prop.__prop.ng-hide(ng-show!="category.current!=0")
+                +e.SPAN.name Отчет
+                +e.SPAN.value(ng-bind="category.current",ng-class="{'prop__value_green':category.type==1,'prop__value_red':category.type==-1}")
+              +b.prop.__prop.ng-hide(ng-show!="category.amount>0")
+                +e.SPAN.name Расчет
+                +e.SPAN.value(ng-bind="category.amount",ng-class="{'prop__value_green':category.type==1,'prop__value_red':category.type==-1}")
+            div.mdl-card__actions
+              div.mdl-textfield.mdl-js-textfield(o-mdl)
+                input.mdl-textfield__input(type="number",id="category.id",ng-model="amount")
+                label.mdl-textfield__label(for="category.id") Amount
+              +e.BUTTON.clear.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--accent.mdl-js-ripple-effect.ng-hide(o-mdl,ng-show!="category.amount>0",ng-click!="ctl.clearAmount(category);amount=''") CLEAR
+              +e.BUTTON.spend.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(o-mdl,ng-click!="ctl.addAmount(category,amount);amount=''") ADD
     o-view
     +b.shutter(ng-hide="!(shutter.loading||shutter.show)")
       +b.message.__message

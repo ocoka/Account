@@ -3,6 +3,7 @@
 }
 html,
 body,
+.workarea,
 .layout {
   width: 100%;
   height: 100%;
@@ -108,7 +109,7 @@ body {
   flex-flow: row wrap;
   align-items: flex-end;
   align-content: flex-start;
-  transition: top 0.7s;
+/*transition top 0.7s*/
 }
 .drawer__props {
   flex: 1 1 auto;
@@ -251,6 +252,22 @@ body {
   margin-top: 1em;
 }
 /*layout and elements */
+.workarea {
+  padding-top: 50px;
+}
+.workarea__controls {
+  margin-top: -50px;
+  height: 50px;
+  overflow-y: hidden;
+  overflow-x: auto;
+  box-sizing: border-box;
+  border-bottom: 1px solid #efefef;
+  padding: 4px 0;
+}
+.workarea__control {
+  margin: 0 0.4em;
+  color: #fff;
+}
 .full-width,
 .layout__categories,
 .layout__fields,

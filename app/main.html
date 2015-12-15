@@ -14,6 +14,7 @@
 }
 html,
 body,
+.workarea,
 .layout {
   width: 100%;
   height: 100%;
@@ -119,7 +120,7 @@ body {
   flex-flow: row wrap;
   align-items: flex-end;
   align-content: flex-start;
-  transition: top 0.7s;
+/*transition top 0.7s*/
 }
 .drawer__props {
   flex: 1 1 auto;
@@ -262,6 +263,22 @@ body {
   margin-top: 1em;
 }
 /*layout and elements */
+.workarea {
+  padding-top: 50px;
+}
+.workarea__controls {
+  margin-top: -50px;
+  height: 50px;
+  overflow-y: hidden;
+  overflow-x: auto;
+  box-sizing: border-box;
+  border-bottom: 1px solid #efefef;
+  padding: 4px 0;
+}
+.workarea__control {
+  margin: 0 0.4em;
+  color: #fff;
+}
 .full-width,
 .layout__categories,
 .layout__fields,
@@ -455,12 +472,12 @@ body {
         </div>
       </div>
     </script>
-    <div ng-controller="oOutcomes as ctl" class="layout">
-      <div o-drawer ng-show="drawer.show" class="drawer layout__drawer mdl-shadow--2dp ng-hide">
+    <div ng-controller="oOutcomes as ctl" class="workarea">
+      <div o-drawer ng-show="drawer.show" class="drawer mdl-shadow--2dp ng-hide workarea__drawer">
         <div ng-click="showDateInput=true" class="drawer__props">
-          <div ng-show="overallOutcome>0" class="ng-hide prop"><span class="prop__name">Итог</span><span ng-bind="overallOutcome" class="prop__value prop__value_big-red"></span>
+          <div ng-show="totalRedSum>0" class="ng-hide prop"><span class="prop__name">Расход</span><span ng-bind="totalRedSum" class="prop__value prop__value_big-red"></span>
           </div>
-          <div ng-show="overallIncome>0" class="ng-hide prop"><span class="prop__name">Итог</span><span ng-bind="overallIncome" class="prop__value prop__value_big-green"></span>
+          <div ng-show="totalGreeSum>0" class="ng-hide prop"><span class="prop__name">Доход</span><span ng-bind="totalGreeSum" class="prop__value prop__value_big-green"></span>
           </div>
           <div ng-show="showDateInput" class="ng-hide prop">
             <input type="date" ng-model="operationDate">
@@ -468,29 +485,35 @@ body {
         </div>
         <div class="drawer__controls">
           <button o-mdl ng-click="ctl.checkOut()" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect">CHECKOUT</button>
-          <button o-mdl ng-click="ctl.clearCategoryAmount()" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent mdl-js-ripple-effect">CLEAR</button>
+          <button o-mdl ng-click="ctl.clearAllAmount()" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent mdl-js-ripple-effect">CLEAR</button>
         </div>
       </div>
-      <div ng-if="state.stage=='categories'" class="categories layout__categories">
-        <div o-mdl ng-repeat="category in categories track by category.id" ng-hide="category.type==1 && overallOutcome>0 || category.type==-1 && overallIncome>0" class="categories__category category mdl-card mdl-shadow--2dp">
-          <div ng-style="{'background-image':'url({{category.image}})'}" class="mdl-card__title">
-            <h1 ng-bind="category.name" class="mdl-card__title-text"></h1>
-          </div>
-          <div class="mdl-card__supporting-text">
-            <div ng-show="category.current!=0" class="category__prop ng-hide prop"><span class="prop__name">Месяц</span><span ng-bind="category.type*category.current" class="prop__value"></span>
+      <div class="workarea__controls">
+        <button o-mdl ng-repeat="nextRoute in stageRoutes track by nextRoute.id " ng-click="state.stage=nextRoute.id" class="mdl-button mdl-button--accent mdl-button--colored mdl-js-button mdl-js-ripple-effect workarea__control"><span ng-bind="nextRoute.name"></span>
+        </button>
+      </div>
+      <div class="layout">
+        <div ng-repeat="route in stageRoutes track by route.id" ng-if="state.stage==route.id" class="categories layout__categories">
+          <div o-mdl ng-repeat="category in cardsBox[state.stage] track by category.id" class="categories__category category mdl-card mdl-shadow--2dp">
+            <div ng-style="{'background-image':'url({{category.image}})'}" class="mdl-card__title">
+              <h1 ng-bind="category.name" class="mdl-card__title-text"></h1>
             </div>
-            <div ng-show="category.amount>0" class="category__prop ng-hide prop"><span class="prop__name">Расчет</span><span ng-bind="category.amount" ng-class="{'prop__value_green':category.type==1,'prop__value_red':category.type==-1}" class="prop__value"></span>
+            <div class="mdl-card__supporting-text">
+              <div ng-show="category.current!=0" class="category__prop ng-hide prop"><span class="prop__name">Отчет</span><span ng-bind="category.current" ng-class="{'prop__value_green':category.type==1,'prop__value_red':category.type==-1}" class="prop__value"></span>
+              </div>
+              <div ng-show="category.amount>0" class="category__prop ng-hide prop"><span class="prop__name">Расчет</span><span ng-bind="category.amount" ng-class="{'prop__value_green':category.type==1,'prop__value_red':category.type==-1}" class="prop__value"></span>
+              </div>
             </div>
-          </div>
-          <div class="mdl-card__actions">
-            <div o-mdl class="mdl-textfield mdl-js-textfield">
-              <input type="number" id="category.id" ng-model="amount" class="mdl-textfield__input">
-              <label for="category.id" class="mdl-textfield__label">Price</label>
+            <div class="mdl-card__actions">
+              <div o-mdl class="mdl-textfield mdl-js-textfield">
+                <input type="number" id="category.id" ng-model="amount" class="mdl-textfield__input">
+                <label for="category.id" class="mdl-textfield__label">Amount</label>
+              </div>
+              <button o-mdl ng-show="category.amount>0" ng-click="ctl.clearAmount(category);amount=''" class="category__clear mdl-button mdl-button--accent mdl-button--raised mdl-js-button mdl-js-ripple-effect ng-hide">CLEAR
+              </button>
+              <button o-mdl ng-click="ctl.addAmount(category,amount);amount=''" class="category__spend mdl-button mdl-button--colored mdl-button--raised mdl-js-button mdl-js-ripple-effect">ADD
+              </button>
             </div>
-            <button o-mdl ng-show="category.amount>0" ng-click="ctl.clearCategoryAmount(category);amount=''" class="category__clear mdl-button mdl-button--accent mdl-button--raised mdl-js-button mdl-js-ripple-effect ng-hide">CLEAR
-            </button>
-            <button o-mdl ng-click="ctl.spendOnCategory(category,amount);amount=''" class="category__spend mdl-button mdl-button--colored mdl-button--raised mdl-js-button mdl-js-ripple-effect">ADD
-            </button>
           </div>
         </div>
       </div>
@@ -589,17 +612,21 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
 }).controller("oOutcomes",["$scope",'$rootScope',"oModalSvc",function($scope,$root,oModalSvc){
 
   /*----------*/
-  function recalcOverallAmount(){
-    $scope.overallIncome=0;
-    $scope.overallOutcome=0;
-    $scope.categories.forEach(function(cat){
+  function recalcTotalAmount(clear){
+    $scope.totalRedSum=0;
+    $scope.totalGreenSum=0;
+    $scope.cardsBox[$scope.state.stage].forEach(function(cat){
+      if (clear) {
+        cat.amount=0;
+        return true;
+      }
       var pInt=parseInt(cat.amount);
       if (!isNaN(pInt)){
         cat.amount=pInt;
         if(cat.type==1){
-          $scope.overallIncome+=pInt;
+          $scope.totalGreenSum+=pInt;
         }else {
-          $scope.overallOutcome+=pInt;
+          $scope.totalRedSum+=pInt;
         }
       }else{
         cat.amount=0;
@@ -622,9 +649,9 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
     $root.shutter.message.text="";
     $root.shutter.show=false;
   }
-  function checkDrawer(){
-    recalcOverallAmount();
-    if ($scope.overallIncome>0||$scope.overallOutcome>0){
+  function checkDrawer(clear){
+    recalcTotalAmount(clear);
+    if ($scope.totalRedSum>0||$scope.totalGreenSum>0){
       $root.drawer.show=true;
     }
     else{
@@ -639,11 +666,11 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
   function loadAppStateSuccess(answer){
     if (answer.result===0){
       if (answer.data.categories!=null){
-        $scope.categories=answer.data.categories;
+        $scope.cardsBox["categories"]=answer.data.categories;
         checkDrawer();
       }
       if (answer.data.contractors!=null){
-        $scope.contractors=answer.data.contractors;
+        $scope.cardsBox["contractors"]=answer.data.contractors;
       }
     }else{
       showError(answer.data);
@@ -653,16 +680,16 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
   }
   /*----------*/
   $scope.state={stage:'categories'};
-  $scope.categories=[];
-  $scope.contractors=[];
-  $scope.overallIncome=0;
-  $scope.overallOutcome=0;
+  $scope.stageRoutes=[{id:'categories',name:'Categories'},{id:'contractors',name:'Contractors'}]
+  $scope.cardsBox={};
+  $scope.totalRedSum=0;
+  $scope.totalGreenSum=0;
   $scope.operationDate=new Date();
 
   /*----------*/
 
   /*----------*/
-  this.spendOnCategory=function spendOnCategory(category,amount){
+  this.addAmount=function addAmount(category,amount){
     amount=parseInt(amount);
     if (amount>0){
       category.amount+=amount;
@@ -671,28 +698,15 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
   }
 
   this.checkOut=function checkOut(){
-    recalcOverallAmount();
-      if ($scope.overallIncome>0){
-          oModalSvc({template:"modal.jade",scope:{contractors:$scope.contractors}}).then(function(result){
-              if (result!=null){
-                var preparedData=[];
-                $scope.categories.forEach(function(cat){
-                  if (cat.type==1 && cat.amount>0){
-                    preparedData.push({id:cat.id,amount:cat.amount});
-                  }
-                });
-                  showLoading();
-                  google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut($scope.operationDate.toISOString(),preparedData,result.id);
-              }
-          });
-      }else if($scope.overallOutcome>0){
+    recalcTotalAmount();
+      if ($scope.totalRedSum>0||$scope.totalGreenSum>0){
         var preparedData=[];
         $scope.categories.forEach(function(cat){
-          if (cat.type==-1 && cat.amount>0){
-            preparedData.push({id:cat.id,amount:cat.amount});
+          if (cat.amount>0){
+            preparedData.push(cat);
           }
         });
-        var avalContractors=$scope.contractors.filter(function(con){return (con.current!=0 && con.type==-1 || con.type==1)});
+        var avalContractors=$scope.contractors.filter(function(con){return (con.current!=0 && con.type==-1)});
         if (avalContractors.length>0){
           oModalSvc({template:"modal.jade",scope:{contractors:avalContractors}}).then(function(result){
               if (result!=null){
@@ -709,18 +723,17 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
 
   }
 
-  this.clearCategoryAmount=function clearCategoryAmount(category){
+  this.clearAmount=function clearAmount(category){
     if (category!=null){
       category.amount=0;
-    }else{
-      $scope.categories.forEach(function(cat){
-        cat.amount=0;
-      });
     }
     checkDrawer();
   }
+  this.clearAllAmount=function clearAllAmount(){
+    checkDrawer(true);
+  }
 
-   google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).loadAppState();
+  google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).loadAppState();
 
 }]);
 

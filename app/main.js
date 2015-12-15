@@ -75,19 +75,23 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
     }
   }
 }).controller("oOutcomes",["$scope",'$rootScope',"oModalSvc",function($scope,$root,oModalSvc){
-
+  var transactionId=null;
   /*----------*/
-  function recalcOverallAmount(){
-    $scope.overallIncome=0;
-    $scope.overallOutcome=0;
-    $scope.categories.forEach(function(cat){
+  function recalcTotalAmount(clear){
+    $scope.totalRedSum=0;
+    $scope.totalGreenSum=0;
+    $scope.cardsBox[$scope.state.stage].forEach(function(cat){
+      if (clear) {
+        cat.amount=0;
+        return true;
+      }
       var pInt=parseInt(cat.amount);
       if (!isNaN(pInt)){
         cat.amount=pInt;
         if(cat.type==1){
-          $scope.overallIncome+=pInt;
+          $scope.totalGreenSum+=pInt;
         }else {
-          $scope.overallOutcome+=pInt;
+          $scope.totalRedSum+=pInt;
         }
       }else{
         cat.amount=0;
@@ -110,9 +114,9 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
     $root.shutter.message.text="";
     $root.shutter.show=false;
   }
-  function checkDrawer(){
-    recalcOverallAmount();
-    if ($scope.overallIncome>0||$scope.overallOutcome>0){
+  function checkDrawer(clear){
+    recalcTotalAmount(clear);
+    if ($scope.totalRedSum>0||$scope.totalGreenSum>0){
       $root.drawer.show=true;
     }
     else{
@@ -126,12 +130,17 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
 
   function loadAppStateSuccess(answer){
     if (answer.result===0){
+      if (answer.data.transactionId!=null){
+        transactionId=answer.data.transactionId;
+      }else{
+        showError("No transaction identifier");
+      }
       if (answer.data.categories!=null){
-        $scope.categories=answer.data.categories;
+        $scope.cardsBox["categories"]=answer.data.categories;
         checkDrawer();
       }
       if (answer.data.contractors!=null){
-        $scope.contractors=answer.data.contractors;
+        $scope.cardsBox["contractors"]=answer.data.contractors;
       }
     }else{
       showError(answer.data);
@@ -141,16 +150,16 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
   }
   /*----------*/
   $scope.state={stage:'categories'};
-  $scope.categories=[];
-  $scope.contractors=[];
-  $scope.overallIncome=0;
-  $scope.overallOutcome=0;
+  $scope.stageRoutes=[{id:'categories',name:'Categories'},{id:'contractors',name:'Contractors'}]
+  $scope.cardsBox={};
+  $scope.totalRedSum=0;
+  $scope.totalGreenSum=0;
   $scope.operationDate=new Date();
 
   /*----------*/
 
   /*----------*/
-  this.spendOnCategory=function spendOnCategory(category,amount){
+  this.addAmount=function addAmount(category,amount){
     amount=parseInt(amount);
     if (amount>0){
       category.amount+=amount;
@@ -159,55 +168,41 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
   }
 
   this.checkOut=function checkOut(){
-    recalcOverallAmount();
-      if ($scope.overallIncome>0){
-          oModalSvc({template:"modal.jade",scope:{contractors:$scope.contractors}}).then(function(result){
-              if (result!=null){
-                var preparedData=[];
-                $scope.categories.forEach(function(cat){
-                  if (cat.type==1 && cat.amount>0){
-                    preparedData.push({id:cat.id,amount:cat.amount});
-                  }
-                });
-                  showLoading();
-                  google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut($scope.operationDate.toISOString(),preparedData,result.id);
-              }
-          });
-      }else if($scope.overallOutcome>0){
+    recalcTotalAmount();
+      if ($scope.totalRedSum>0||$scope.totalGreenSum>0){
         var preparedData=[];
-        $scope.categories.forEach(function(cat){
-          if (cat.type==-1 && cat.amount>0){
-            preparedData.push({id:cat.id,amount:cat.amount});
+        $scope.cardsBox[$scope.state.stage].forEach(function(cat){
+          if (cat.amount>0){
+            preparedData.push(cat);
           }
         });
-        var avalContractors=$scope.contractors.filter(function(con){return (con.current!=0 && con.type==-1 || con.type==1)});
-        if (avalContractors.length>0){
+        var avalContractors=$scope.cardsBox["contractors"].filter(function(con){return con.current>0});
+        if (avalContractors.length>1){
           oModalSvc({template:"modal.jade",scope:{contractors:avalContractors}}).then(function(result){
               if (result!=null){
                 showLoading();
-                google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut($scope.operationDate.toISOString(),preparedData,result.id);
+                google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut(transactionId,$scope.state.stage,$scope.operationDate.toISOString(),preparedData,result.id);
               }
             });
         }else{
           showLoading();
-          google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut($scope.operationDate.toISOString(),preparedData,null);
+          google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut(transactionId,$scope.state.stage,$scope.operationDate.toISOString(),preparedData,avalContractors.length>0?avalContractors[0].id:null);
         }
       }
       //google.script.run.withSuccessHandler(loadAppStateSuccess).checkOut();
 
   }
 
-  this.clearCategoryAmount=function clearCategoryAmount(category){
+  this.clearAmount=function clearAmount(category){
     if (category!=null){
       category.amount=0;
-    }else{
-      $scope.categories.forEach(function(cat){
-        cat.amount=0;
-      });
     }
     checkDrawer();
   }
+  this.clearAllAmount=function clearAllAmount(){
+    checkDrawer(true);
+  }
 
-   google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).loadAppState();
+  google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).loadAppState();
 
 }]);
