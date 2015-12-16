@@ -459,7 +459,7 @@ body {
                 <div class="contractor__content">
                   <div ng-bind="contractor.name" class="contractor__title">
                   </div>
-                  <div ng-bind="contractor.current*contractor.type" class="contractor__data">
+                  <div ng-bind="contractor.current" class="contractor__data">
                   </div>
                 </div>
               </button>
@@ -610,7 +610,7 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
     }
   }
 }).controller("oOutcomes",["$scope",'$rootScope',"oModalSvc",function($scope,$root,oModalSvc){
-
+  var transactionId=null;
   /*----------*/
   function recalcTotalAmount(clear){
     $scope.totalRedSum=0;
@@ -665,13 +665,18 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
 
   function loadAppStateSuccess(answer){
     if (answer.result===0){
+      if (answer.data.transactionId!=null){
+        transactionId=answer.data.transactionId;
+      }else{
+        showError("No transaction identifier");
+      }
       if (answer.data.categories!=null){
         $scope.cardsBox["categories"]=answer.data.categories;
-        checkDrawer();
       }
       if (answer.data.contractors!=null){
         $scope.cardsBox["contractors"]=answer.data.contractors;
       }
+      checkDrawer();
     }else{
       showError(answer.data);
     }
@@ -701,22 +706,35 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
     recalcTotalAmount();
       if ($scope.totalRedSum>0||$scope.totalGreenSum>0){
         var preparedData=[];
-        $scope.categories.forEach(function(cat){
+        $scope.cardsBox[$scope.state.stage].forEach(function(cat){
           if (cat.amount>0){
             preparedData.push(cat);
           }
         });
-        var avalContractors=$scope.contractors.filter(function(con){return (con.current!=0 && con.type==-1)});
-        if (avalContractors.length>0){
+
+        var avalContractors=[];
+        switch($scope.state.stage){
+            case 'contractors':
+              avalContractors=$scope.cardsBox["contractors"].filter(function(con){return con.id!='con5'});
+              break;
+            case 'categories':
+              avalContractors=$scope.cardsBox["contractors"].filter(function(con){return con.current>0});
+              break;
+            default:
+              break;
+        }
+
+
+        if (avalContractors.length>1){
           oModalSvc({template:"modal.jade",scope:{contractors:avalContractors}}).then(function(result){
               if (result!=null){
                 showLoading();
-                google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut($scope.operationDate.toISOString(),preparedData,result.id);
+                google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut(transactionId,$scope.state.stage,$scope.operationDate.toISOString(),preparedData,result.id);
               }
             });
         }else{
           showLoading();
-          google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut($scope.operationDate.toISOString(),preparedData,null);
+          google.script.run.withFailureHandler(genericFailure).withSuccessHandler(loadAppStateSuccess).checkOut(transactionId,$scope.state.stage,$scope.operationDate.toISOString(),preparedData,avalContractors.length>0?avalContractors[0].id:null);
         }
       }
       //google.script.run.withSuccessHandler(loadAppStateSuccess).checkOut();

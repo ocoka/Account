@@ -8,6 +8,6 @@ include bemto/bemto
           +e.image(ng-style="{'background-image':'url({{contractor.image}})'}")
           +e.content
             +e.title(ng-bind="contractor.name")
-            +e.data(ng-bind="contractor.current*contractor.type")
+            +e.data(ng-bind="contractor.current")
     +b.controls.__controls
       +e.BUTTON.control.mdl-button.mdl-js-button.mdl-button--raised.mdl-button--colored.mdl-js-ripple-effect(ng-click="$close()") BACK 

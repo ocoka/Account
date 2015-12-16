@@ -137,11 +137,11 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
       }
       if (answer.data.categories!=null){
         $scope.cardsBox["categories"]=answer.data.categories;
-        checkDrawer();
       }
       if (answer.data.contractors!=null){
         $scope.cardsBox["contractors"]=answer.data.contractors;
       }
+      checkDrawer();
     }else{
       showError(answer.data);
     }
@@ -176,7 +176,20 @@ angular.module("oAccount",["ngAnimate"]).run(['$rootScope',function($root){
             preparedData.push(cat);
           }
         });
-        var avalContractors=$scope.cardsBox["contractors"].filter(function(con){return con.current>0});
+
+        var avalContractors=[];
+        switch($scope.state.stage){
+            case 'contractors':
+              avalContractors=$scope.cardsBox["contractors"].filter(function(con){return con.id!='con5'});
+              break;
+            case 'categories':
+              avalContractors=$scope.cardsBox["contractors"].filter(function(con){return con.current>0});
+              break;
+            default:
+              break;
+        }
+
+
         if (avalContractors.length>1){
           oModalSvc({template:"modal.jade",scope:{contractors:avalContractors}}).then(function(result){
               if (result!=null){
